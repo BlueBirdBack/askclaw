@@ -22,6 +22,8 @@
   --code-border: #ddd;
   --input-bg: #fff;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --warning-bg: #fef3cd;
+  --warning-text: #664d03;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +45,8 @@
     --code-border: #444;
     --input-bg: #1a1a1a;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --warning-bg: #3b2f00;
+    --warning-text: #ffd666;
   }
 }
 

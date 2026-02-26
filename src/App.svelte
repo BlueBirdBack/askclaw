@@ -4,9 +4,12 @@
   import { t } from './lib/i18n';
   import { fetchUsername, streamChat } from './lib/api';
   import Header from './components/Header.svelte';
+  import WarningBanner from './components/WarningBanner.svelte';
+  import TosModal from './components/TosModal.svelte';
   import MessageList from './components/MessageList.svelte';
   import ChatInput from './components/ChatInput.svelte';
 
+  let tosOpen = $state(false);
   let chatInput: ChatInput;
 
   onMount(() => {
@@ -65,6 +68,9 @@
   <MessageList />
   <ChatInput bind:this={chatInput} onsend={handleSend} />
 </div>
+
+<WarningBanner onopentos={() => tosOpen = true} />
+<TosModal open={tosOpen} onclose={() => tosOpen = false} />
 
 <style>
   #shell {

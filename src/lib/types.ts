@@ -24,4 +24,9 @@ export interface I18nStrings {
   errGeneric: string;
   errNetwork: string;
   noResponse: string;
+  warning: string;
+  tosLink: string;
+  tosTitle: string;
+  tosClose: string;
+  tosBody: string;
 }
