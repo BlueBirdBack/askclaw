@@ -1,0 +1,14 @@
+[Unit]
+Description=AskClaw API
+After=network.target
+
+[Service]
+WorkingDirectory=/root/2602/server
+ExecStart=/root/2602/server/.venv/bin/uvicorn askclaw.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=3
+Environment=ASKCLAW_DB_PATH=/root/2602/server/data/askclaw.db
+Environment=ASKCLAW_HTPASSWD_PATH=/etc/nginx/.htpasswd
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,52 @@
 import type { ChatMessage, Model } from './types';
 
+// --- Chat persistence API ---
+
+export async function createChat(id: string, model: Model): Promise<void> {
+  await fetch('/api/chats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, model }),
+  });
+}
+
+export async function saveMessages(
+  chatId: string,
+  messages: { role: string; content: string }[],
+): Promise<void> {
+  await fetch(`/api/chats/${chatId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+}
+
+export interface ChatSummary {
+  id: string;
+  title: string;
+  model: string;
+  category_id: number | null;
+  tag_ids: number[];
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchChats(): Promise<ChatSummary[]> {
+  const resp = await fetch('/api/chats');
+  if (!resp.ok) return [];
+  return resp.json();
+}
+
+export interface ChatDetail extends ChatSummary {
+  messages: { id: number; role: string; content: string; created_at: string }[];
+}
+
+export async function fetchChat(id: string): Promise<ChatDetail | null> {
+  const resp = await fetch(`/api/chats/${id}`);
+  if (!resp.ok) return null;
+  return resp.json();
+}
+
 export async function fetchUsername(): Promise<string> {
   try {
     const resp = await fetch('/whoami');

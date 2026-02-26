@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { chatState } from './lib/state.svelte';
   import { t } from './lib/i18n';
-  import { fetchUsername, streamChat } from './lib/api';
+  import { fetchUsername, streamChat, createChat, saveMessages } from './lib/api';
   import Header from './components/Header.svelte';
   import WarningBanner from './components/WarningBanner.svelte';
   import TosModal from './components/TosModal.svelte';
@@ -21,9 +21,19 @@
   async function handleSend(text: string) {
     if (chatState.streaming) return;
 
+    // On first message, create a new chat in the backend
+    const isFirstMessage = !chatState.currentChatId;
+    if (isFirstMessage) {
+      const chatId = crypto.randomUUID();
+      chatState.currentChatId = chatId;
+      createChat(chatId, chatState.model).catch(() => {});
+    }
+
     chatState.addUserMessage(text);
     chatState.addAssistantPlaceholder();
     chatState.streaming = true;
+
+    const userText = text;
 
     await streamChat(
       [...chatState.history],
@@ -40,6 +50,14 @@
           chatState.finalizeAssistant(full);
           chatState.streaming = false;
           chatInput.focus();
+
+          // Save user + assistant messages to backend
+          if (chatState.currentChatId && full) {
+            saveMessages(chatState.currentChatId, [
+              { role: 'user', content: userText },
+              { role: 'assistant', content: full },
+            ]).catch(() => {});
+          }
         },
         onError(code) {
           chatState.removeLastAssistant();

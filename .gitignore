@@ -26,6 +26,11 @@ dist-ssr
 *.sln
 *.sw?
 
+# Python / server
+server/data/
+__pycache__
+.venv
+
 # Screenshots and test artifacts
 screenshot-*.png
 reference.png

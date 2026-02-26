@@ -7,6 +7,7 @@ class ChatState {
   history: ChatMessage[] = $state([]);
   streaming: boolean = $state(false);
   username: string = $state('web');
+  currentChatId: string | null = $state(null);
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -26,6 +27,7 @@ class ChatState {
   newChat() {
     this.messages = [];
     this.history = [];
+    this.currentChatId = null;
   }
 
   addUserMessage(content: string) {
