@@ -66,6 +66,7 @@ server/
 
 - **State**: Single `ChatState` class in `state.svelte.ts` with `$state` fields. Exported as singleton `chatState`. Components import and read/write fields directly.
 - **CSS**: Theme variables + markdown typography in global `app.css` (needed for `{@html}` content). Component layout in scoped `<style>` blocks.
+- **System prompt**: `streamChat()` prepends a system message with the current date/time in Asia/Taipei (UTC+8) so the LLM knows the user's timezone.
 - **Streaming**: SSE logic in `api.ts` with callbacks. Mutating `$state` object properties triggers reactivity.
 - **i18n**: `t(lang, key)` function with static dictionaries. Language stored in localStorage.
 - **Chat persistence**: On first message, frontend generates a UUID and creates a chat via `POST /api/chats`. After each stream completes, user + assistant messages are saved via `POST /api/chats/{id}/messages`. Title is auto-generated from the first user message.

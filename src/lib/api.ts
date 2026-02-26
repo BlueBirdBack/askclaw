@@ -71,13 +71,20 @@ export async function streamChat(
 ): Promise<void> {
   let resp: Response;
   try {
+    const now = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Taipei',
+      dateStyle: 'full',
+      timeStyle: 'short',
+    });
+    const systemMsg = { role: 'system' as const, content: `The current date and time is ${now} (Asia/Taipei, UTC+8).` };
+
     resp = await fetch('/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
         stream: true,
-        messages,
+        messages: [systemMsg, ...messages],
         user: 'askclaw-' + username,
       }),
     });
