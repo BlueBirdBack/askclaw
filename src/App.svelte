@@ -6,10 +6,12 @@
   import Header from './components/Header.svelte';
   import WarningBanner from './components/WarningBanner.svelte';
   import TosModal from './components/TosModal.svelte';
+  import PasswordModal from './components/PasswordModal.svelte';
   import MessageList from './components/MessageList.svelte';
   import ChatInput from './components/ChatInput.svelte';
 
   let tosOpen = $state(false);
+  let passwordOpen = $state(false);
   let chatInput: ChatInput;
 
   onMount(() => {
@@ -82,13 +84,14 @@
 </script>
 
 <div id="shell">
-  <Header />
+  <Header onopenpassword={() => passwordOpen = true} />
   <MessageList />
   <ChatInput bind:this={chatInput} onsend={handleSend} />
 </div>
 
 <WarningBanner onopentos={() => tosOpen = true} />
 <TosModal open={tosOpen} onclose={() => tosOpen = false} />
+<PasswordModal open={passwordOpen} onclose={() => passwordOpen = false} />
 
 <style>
   #shell {

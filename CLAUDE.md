@@ -16,7 +16,7 @@ A ChatGPT-style web UI for the OpenClaw API (Claude-based) with a FastAPI backen
 ### Backend
 - **Python 3.11+**, **FastAPI**, **SQLite** (WAL mode, FTS5)
 - **uv** as package manager
-- **bcrypt** for htpasswd password changes
+- **bcrypt** + **apr1** (Apache MD5) for htpasswd password changes
 - Raw SQL (no ORM)
 
 ## Project structure
@@ -34,7 +34,7 @@ src/
     api.ts                    # fetchUsername(), streamChat() SSE, chat persistence API
     export.ts                 # exportChatAsMarkdown() — blob download
   components/
-    Header.svelte             # Title, lang toggle, new-chat, export button
+    Header.svelte             # Title, lang toggle, new-chat, export, password button
     Welcome.svelte            # Centered welcome screen
     MessageList.svelte        # Scrollable container with auto-scroll
     MessageBubble.svelte      # Single message bubble with per-message copy button
@@ -42,6 +42,7 @@ src/
     ChatInput.svelte          # Model select, auto-grow textarea, send button
     WarningBanner.svelte      # Floating badge (bottom-right) + popover warning
     TosModal.svelte           # Full-screen Terms of Service modal
+    PasswordModal.svelte      # Password change modal
 
 server/
   pyproject.toml              # Python dependencies (FastAPI, uvicorn, bcrypt)
@@ -59,7 +60,7 @@ server/
       categories.py           # CRUD categories
       tags.py                 # CRUD tags
       search.py               # FTS5 full-text search
-      password.py             # Change htpasswd password
+      password.py             # Change htpasswd password (supports $apr1$ and bcrypt)
 ```
 
 ## Key patterns

@@ -31,4 +31,12 @@ export interface I18nStrings {
   tosBody: string;
   copied: string;
   exportChat: string;
+  changePassword: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  passwordChanged: string;
+  passwordMismatch: string;
+  passwordWrong: string;
+  passwordError: string;
 }

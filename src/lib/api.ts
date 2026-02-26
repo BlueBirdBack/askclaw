@@ -1,5 +1,22 @@
 import type { ChatMessage, Model } from './types';
 
+// --- Password ---
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ ok: boolean }> {
+  const resp = await fetch('/api/password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+  if (!resp.ok) {
+    throw resp;
+  }
+  return resp.json();
+}
+
 // --- Chat persistence API ---
 
 export async function createChat(id: string, model: Model): Promise<void> {

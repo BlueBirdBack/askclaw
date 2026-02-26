@@ -2,6 +2,8 @@
   import { chatState } from '../lib/state.svelte';
   import { t } from '../lib/i18n';
   import { exportChatAsMarkdown } from '../lib/export';
+
+  let { onopenpassword }: { onopenpassword: () => void } = $props();
 </script>
 
 <header>
@@ -12,6 +14,9 @@
         {t(chatState.lang, 'exportChat')}
       </button>
     {/if}
+    <button onclick={onopenpassword} title={t(chatState.lang, 'changePassword')}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
     <button onclick={() => chatState.toggleLang()}>
       {t(chatState.lang, 'langSwitch')}
     </button>
