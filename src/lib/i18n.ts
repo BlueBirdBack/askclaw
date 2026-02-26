@@ -2,7 +2,7 @@ import type { Lang, I18nStrings } from './types';
 
 const strings: Record<Lang, I18nStrings> = {
   zh: {
-    title: 'OpenClaw',
+    title: 'Ask Claw',
     newChat: '新对话',
     welcomeTitle: '有什么想问的？',
     welcomeDesc: '在下方输入消息开始对话。',

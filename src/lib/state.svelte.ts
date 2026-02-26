@@ -16,7 +16,7 @@ class ChatState {
     this.lang = lang;
     localStorage.setItem('askclaw_lang', lang);
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-    document.title = lang === 'zh' ? 'Ask Claw - OpenClaw' : 'Ask Claw';
+    document.title = 'Ask Claw';
   }
 
   toggleLang() {

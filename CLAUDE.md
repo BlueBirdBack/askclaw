@@ -32,6 +32,8 @@ src/
     MessageBubble.svelte      # Single message bubble (user/assistant/error)
     TypingIndicator.svelte    # Three-dot bounce animation
     ChatInput.svelte          # Model select, auto-grow textarea, send button
+    WarningBanner.svelte      # Floating badge (bottom-right) + popover warning
+    TosModal.svelte           # Full-screen Terms of Service modal
 ```
 
 ## Key patterns
