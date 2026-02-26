@@ -1,0 +1,139 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f5f5;
+  --bg3: #e8e8e8;
+  --text: #1a1a1a;
+  --text2: #555;
+  --text3: #888;
+  --accent: #2563eb;
+  --accent2: #1d4ed8;
+  --border: #e0e0e0;
+  --user-bg: #2563eb;
+  --user-text: #fff;
+  --assistant-bg: #f0f0f0;
+  --assistant-text: #1a1a1a;
+  --code-bg: #f5f5f5;
+  --code-border: #ddd;
+  --input-bg: #fff;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #1a1a1a;
+    --bg3: #2a2a2a;
+    --text: #e0e0e0;
+    --text2: #aaa;
+    --text3: #666;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --border: #333;
+    --user-bg: #2563eb;
+    --user-text: #fff;
+    --assistant-bg: #1e1e1e;
+    --assistant-text: #e0e0e0;
+    --code-bg: #2a2a2a;
+    --code-border: #444;
+    --input-bg: #1a1a1a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+html,
+body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Markdown typography (global because {@html} bypasses scoped styles) */
+.msg-assistant p {
+  margin-bottom: 8px;
+}
+.msg-assistant p:last-child {
+  margin-bottom: 0;
+}
+.msg-assistant code {
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 13px;
+  background: var(--code-bg);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.msg-assistant pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+.msg-assistant pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+}
+.msg-assistant strong {
+  font-weight: 600;
+}
+.msg-assistant em {
+  font-style: italic;
+}
+.msg-assistant ul,
+.msg-assistant ol {
+  margin: 6px 0 6px 20px;
+}
+.msg-assistant li {
+  margin-bottom: 4px;
+}
+.msg-assistant a {
+  color: var(--accent2);
+  text-decoration: underline;
+}
+.msg-assistant blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 12px;
+  color: var(--text2);
+  margin: 8px 0;
+}
+.msg-assistant h1,
+.msg-assistant h2,
+.msg-assistant h3,
+.msg-assistant h4 {
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+.msg-assistant h1 { font-size: 1.3em; }
+.msg-assistant h2 { font-size: 1.15em; }
+.msg-assistant h3 { font-size: 1.05em; }
+.msg-assistant table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+}
+.msg-assistant th,
+.msg-assistant td {
+  border: 1px solid var(--code-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.msg-assistant th {
+  background: var(--code-bg);
+  font-weight: 600;
+}
+
+/* Typing indicator animation */
+@keyframes bounce {
+  to {
+    opacity: 0.3;
+    transform: translateY(-4px);
+  }
+}
