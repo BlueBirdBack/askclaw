@@ -29,4 +29,6 @@ export interface I18nStrings {
   tosTitle: string;
   tosClose: string;
   tosBody: string;
+  copied: string;
+  exportChat: string;
 }

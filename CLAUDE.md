@@ -25,11 +25,12 @@ src/
     state.svelte.ts           # ChatState singleton class ($state runes)
     markdown.ts               # marked configuration
     api.ts                    # fetchUsername(), streamChat() SSE
+    export.ts                 # exportChatAsMarkdown() — blob download
   components/
-    Header.svelte             # Title, lang toggle, new-chat button
+    Header.svelte             # Title, lang toggle, new-chat, export button
     Welcome.svelte            # Centered welcome screen
     MessageList.svelte        # Scrollable container with auto-scroll
-    MessageBubble.svelte      # Single message bubble (user/assistant/error)
+    MessageBubble.svelte      # Single message bubble with per-message copy button
     TypingIndicator.svelte    # Three-dot bounce animation
     ChatInput.svelte          # Model select, auto-grow textarea, send button
     WarningBanner.svelte      # Floating badge (bottom-right) + popover warning

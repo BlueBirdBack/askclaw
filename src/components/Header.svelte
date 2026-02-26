@@ -1,11 +1,17 @@
 <script lang="ts">
   import { chatState } from '../lib/state.svelte';
   import { t } from '../lib/i18n';
+  import { exportChatAsMarkdown } from '../lib/export';
 </script>
 
 <header>
   <h1>{t(chatState.lang, 'title')}</h1>
   <div class="actions">
+    {#if chatState.hasMessages}
+      <button onclick={() => exportChatAsMarkdown(chatState.messages)}>
+        {t(chatState.lang, 'exportChat')}
+      </button>
+    {/if}
     <button onclick={() => chatState.toggleLang()}>
       {t(chatState.lang, 'langSwitch')}
     </button>

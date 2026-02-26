@@ -30,6 +30,8 @@ const strings: Record<Lang, I18nStrings> = {
 5. 用户责任：您对使用本服务的行为及其后果承担全部责任。因违反上述条款造成的任何损失，服务提供方概不负责。
 
 继续使用本服务即表示您已阅读、理解并同意以上条款。`,
+    copied: '已复制',
+    exportChat: '导出',
   },
   en: {
     title: 'Ask Claw',
@@ -60,6 +62,8 @@ const strings: Record<Lang, I18nStrings> = {
 5. User Responsibility: You are solely responsible for your use of this service and its consequences. The service provider is not liable for any losses resulting from violation of these terms.
 
 By continuing to use this service, you acknowledge that you have read, understood, and agreed to these terms.`,
+    copied: 'Copied',
+    exportChat: 'Export',
   },
 };
 
