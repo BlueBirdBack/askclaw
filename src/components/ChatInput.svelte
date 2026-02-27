@@ -1,9 +1,10 @@
 <script lang="ts">
   import { chatState } from '../lib/state.svelte';
   import { t } from '../lib/i18n';
+  import { compressImage } from '../lib/compress';
   import type { PendingFile } from '../lib/types';
 
-  const MAX_SIZE = 5 * 1024 * 1024;
+  const MAX_SIZE = 20 * 1024 * 1024;
   const MAX_FILES = 5;
   const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
@@ -34,7 +35,7 @@
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   }
 
-  function addFiles(fileList: FileList | File[]) {
+  async function addFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList);
     for (const file of files) {
       if (chatState.pendingFiles.length >= MAX_FILES) {
@@ -49,10 +50,11 @@
         alert(t(chatState.lang, 'imageTooLarge'));
         continue;
       }
+      const compressed = await compressImage(file);
       chatState.pendingFiles.push({
         id: crypto.randomUUID(),
-        file,
-        previewUrl: URL.createObjectURL(file),
+        file: compressed,
+        previewUrl: URL.createObjectURL(compressed),
       });
     }
   }
