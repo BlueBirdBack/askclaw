@@ -1,7 +1,7 @@
 <script lang="ts">
   import { chatState } from '../lib/state.svelte';
   import { t } from '../lib/i18n';
-  import { exportChatAsMarkdown } from '../lib/export';
+  import ExportMenu from './ExportMenu.svelte';
   import SettingsMenu from './SettingsMenu.svelte';
 
   let { onopenpassword, onopentos }: { onopenpassword: () => void; onopentos: () => void } = $props();
@@ -11,9 +11,7 @@
   <h1>{t(chatState.lang, 'title')}</h1>
   <div class="actions">
     {#if chatState.hasMessages}
-      <button onclick={() => exportChatAsMarkdown(chatState.messages)}>
-        {t(chatState.lang, 'exportChat')}
-      </button>
+      <ExportMenu messages={chatState.messages} />
     {/if}
     <button onclick={() => chatState.newChat()}>
       {t(chatState.lang, 'newChat')}
