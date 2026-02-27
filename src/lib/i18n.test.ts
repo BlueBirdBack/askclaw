@@ -6,7 +6,7 @@ describe('i18n', () => {
     expect(t('zh', 'title')).toBe('Ask Claw');
   });
 
-  it('returns correct English string for attachImage', () => {
-    expect(t('en', 'attachImage')).toBe('Attach image');
+  it('returns correct English string for attachFile', () => {
+    expect(t('en', 'attachFile')).toBe('Attach file');
   });
 });

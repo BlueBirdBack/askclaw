@@ -27,6 +27,7 @@ def test_single_upload(test_env):
     assert item["size"] == 256
     assert item["url"].startswith("/api/files/")
     assert item["id"]
+    assert item["storage_path"]  # new field returned
 
 
 def test_multiple_upload(test_env):
@@ -52,13 +53,21 @@ def test_too_many_files(test_env):
 
 
 def test_unsupported_type(test_env):
-    resp = _upload(test_env, files=[("files", ("doc.pdf", io.BytesIO(b"%PDF"), "application/pdf"))])
+    resp = _upload(test_env, files=[("files", ("data.bin", io.BytesIO(b"\x00\x01"), "application/octet-stream"))])
     assert resp.status_code == 400
     assert "Unsupported file type" in resp.json()["detail"]
 
 
+def test_pdf_upload_allowed(test_env):
+    resp = _upload(test_env, files=[("files", ("doc.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf"))])
+    assert resp.status_code == 201
+    item = resp.json()[0]
+    assert item["filename"] == "doc.pdf"
+    assert item["content_type"] == "application/pdf"
+
+
 def test_file_too_large(test_env):
-    big = _jpeg_bytes(6 * 1024 * 1024)
+    big = _jpeg_bytes(51 * 1024 * 1024)
     resp = _upload(test_env, files=[("files", ("huge.jpg", io.BytesIO(big), "image/jpeg"))])
     assert resp.status_code == 400
     assert "too large" in resp.json()["detail"]

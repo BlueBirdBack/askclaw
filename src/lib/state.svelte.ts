@@ -81,7 +81,7 @@ class ChatState {
 
   clearPendingFiles() {
     for (const pf of this.pendingFiles) {
-      URL.revokeObjectURL(pf.previewUrl);
+      if (pf.isImage) URL.revokeObjectURL(pf.previewUrl);
     }
     this.pendingFiles = [];
   }

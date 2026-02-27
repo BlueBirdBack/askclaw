@@ -1,3 +1,4 @@
+import mimetypes
 import uuid
 from pathlib import Path
 
@@ -12,13 +13,25 @@ from ..models import AttachmentOut
 router = APIRouter(prefix="/files", tags=["files"])
 
 
+def _resolve_content_type(upload: UploadFile) -> str:
+    """Return the best content type, falling back to extension-based guess."""
+    ct = upload.content_type
+    if ct and ct != "application/octet-stream":
+        return ct
+    if upload.filename:
+        guessed, _ = mimetypes.guess_type(upload.filename)
+        if guessed:
+            return guessed
+    return ct or "application/octet-stream"
+
+
 @router.post("", response_model=list[AttachmentOut], status_code=201)
 async def upload_files(
     files: list[UploadFile],
     username: str = Depends(get_current_user),
 ):
-    if len(files) > settings.max_images_per_message:
-        raise HTTPException(400, f"Maximum {settings.max_images_per_message} images allowed")
+    if len(files) > settings.max_files_per_message:
+        raise HTTPException(400, f"Maximum {settings.max_files_per_message} files allowed")
 
     results: list[AttachmentOut] = []
     conn = get_connection()
@@ -27,17 +40,17 @@ async def upload_files(
         user_dir.mkdir(parents=True, exist_ok=True)
 
         for f in files:
-            if f.content_type not in settings.allowed_image_types:
-                raise HTTPException(400, f"Unsupported file type: {f.content_type}")
+            content_type = _resolve_content_type(f)
+            if content_type not in settings.allowed_file_types:
+                raise HTTPException(400, f"Unsupported file type: {content_type}")
 
             data = await f.read()
-            if len(data) > settings.max_image_size:
+            if len(data) > settings.max_file_size:
                 raise HTTPException(400, f"File too large: {f.filename} ({len(data)} bytes)")
 
             file_id = str(uuid.uuid4())
-            ext = (f.filename or "image").rsplit(".", 1)[-1].lower()
-            if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
-                ext = "bin"
+            original_name = f.filename or "file"
+            ext = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else "bin"
             storage_name = f"{file_id}.{ext}"
             storage_path = user_dir / storage_name
 
@@ -46,15 +59,16 @@ async def upload_files(
             conn.execute(
                 "INSERT INTO attachments (id, username, filename, content_type, size, storage_path) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (file_id, username, f.filename or "image", f.content_type, len(data), str(storage_path)),
+                (file_id, username, original_name, content_type, len(data), str(storage_path)),
             )
 
             results.append(AttachmentOut(
                 id=file_id,
-                filename=f.filename or "image",
-                content_type=f.content_type,
+                filename=original_name,
+                content_type=content_type,
                 size=len(data),
                 url=f"/api/files/{file_id}",
+                storage_path=str(storage_path),
             ))
 
         conn.commit()

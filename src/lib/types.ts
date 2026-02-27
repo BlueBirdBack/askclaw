@@ -8,12 +8,14 @@ export interface Attachment {
   content_type: string;
   size: number;
   url: string;
+  storage_path?: string;
 }
 
 export interface PendingFile {
   id: string;
   file: File;
   previewUrl: string;
+  isImage: boolean;
   ready?: Promise<void>;
 }
 
@@ -59,11 +61,11 @@ export interface I18nStrings {
   passwordMismatch: string;
   passwordWrong: string;
   passwordError: string;
-  attachImage: string;
-  removeImage: string;
+  attachFile: string;
+  removeFile: string;
   uploadFailed: string;
-  imageTooLarge: string;
-  tooManyImages: string;
+  fileTooLarge: string;
+  tooManyFiles: string;
   unsupportedType: string;
   settings: string;
 }

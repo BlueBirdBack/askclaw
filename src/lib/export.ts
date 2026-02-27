@@ -9,10 +9,13 @@ export function exportChatAsMarkdown(messages: DisplayMessage[]): void {
     let body = msg.content;
 
     if (msg.attachments && msg.attachments.length > 0) {
-      const imageRefs = msg.attachments
-        .map((att) => `![${att.filename}](${att.url})`)
+      const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+      const refs = msg.attachments
+        .map((att) => IMAGE_TYPES.has(att.content_type)
+          ? `![${att.filename}](${att.url})`
+          : `[${att.filename}](${att.url})`)
         .join('\n');
-      body = body ? `${imageRefs}\n\n${body}` : imageRefs;
+      body = body ? `${refs}\n\n${body}` : refs;
     }
 
     parts.push(`${heading}\n\n${body}`);

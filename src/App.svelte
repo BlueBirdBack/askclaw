@@ -21,27 +21,39 @@
     chatInput.focus();
   });
 
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+  }
+
   async function handleSend(text: string, files: PendingFile[]) {
     if (chatState.streaming) return;
 
     // Wait for any in-progress compressions to finish
     await Promise.all(files.map(f => f.ready));
 
-    // Extract raw File objects from proxy wrappers immediately
-    const rawFiles: File[] = files.map(pf => pf.file);
+    // Split into image vs non-image files
+    const imageFiles = files.filter(pf => pf.isImage);
+    const nonImageFiles = files.filter(pf => !pf.isImage);
 
-    // Read base64 data from raw files BEFORE any state changes (avoids $state proxy issues)
+    // Extract raw File objects from proxy wrappers immediately
+    const rawImageFiles: File[] = imageFiles.map(pf => pf.file);
+    const rawNonImageFiles: File[] = nonImageFiles.map(pf => pf.file);
+    const allRawFiles: File[] = [...rawImageFiles, ...rawNonImageFiles];
+
+    // Read base64 data from image files BEFORE any state changes (avoids $state proxy issues)
     let imageData: { data: string; media_type: string }[] = [];
-    if (rawFiles.length > 0) {
+    if (rawImageFiles.length > 0) {
       try {
-        imageData = await Promise.all(rawFiles.map(f => readFileAsBase64(f)));
+        imageData = await Promise.all(rawImageFiles.map(f => readFileAsBase64(f)));
       } catch {
-        // base64 read failed, will send text-only
+        // base64 read failed, will send text-only for images
       }
     }
 
-    // Revoke preview URLs early
-    for (const pf of files) {
+    // Revoke preview URLs for images only
+    for (const pf of imageFiles) {
       URL.revokeObjectURL(pf.previewUrl);
     }
 
@@ -53,11 +65,11 @@
       createChat(chatId, chatState.model).catch(() => {});
     }
 
-    // Upload files to backend and get server attachments
+    // Upload all files to backend and get server attachments
     let attachments: Attachment[] = [];
-    if (rawFiles.length > 0) {
+    if (allRawFiles.length > 0) {
       try {
-        attachments = await uploadFiles(rawFiles);
+        attachments = await uploadFiles(allRawFiles);
       } catch {
         chatState.addError(t(chatState.lang, 'uploadFailed'));
         return;
@@ -72,14 +84,31 @@
 
     // Build LLM messages: copy history but replace the last user message with multimodal content
     const llmMessages: ChatMessage[] = chatState.history.map(m => ({ role: m.role, content: m.content }));
-    if (imageData.length > 0) {
-      const blocks: ContentBlock[] = [
-        { type: 'input_text', text: text || 'What is in the image(s)?' },
-        ...imageData.map(img => ({
-          type: 'input_image' as const,
-          source: { type: 'base64' as const, media_type: img.media_type, data: img.data },
-        })),
-      ];
+    if (imageData.length > 0 || nonImageFiles.length > 0) {
+      const blocks: ContentBlock[] = [];
+
+      // Add text blocks for non-image file attachments (so the LLM knows what was attached)
+      const nonImageAttachments = attachments.filter(a =>
+        !a.content_type.startsWith('image/')
+      );
+      for (const att of nonImageAttachments) {
+        blocks.push({
+          type: 'input_text',
+          text: `[Attached file: ${att.filename} (${att.content_type}, ${formatSize(att.size)}) at ${att.storage_path}]`,
+        });
+      }
+
+      // Add the user's text
+      blocks.push({ type: 'input_text', text: text || (imageData.length > 0 ? 'What is in the image(s)?' : 'See the attached file(s).') });
+
+      // Add base64 image blocks
+      for (const img of imageData) {
+        blocks.push({
+          type: 'input_image',
+          source: { type: 'base64', media_type: img.media_type, data: img.data },
+        });
+      }
+
       llmMessages[llmMessages.length - 1] = { role: 'user', content: blocks };
     }
 

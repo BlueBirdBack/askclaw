@@ -21,6 +21,7 @@ class AttachmentOut(BaseModel):
     content_type: str
     size: int
     url: str
+    storage_path: str | None = None
 
 
 class MessageIn(BaseModel):

@@ -4,9 +4,45 @@
   import { compressImage } from '../lib/compress';
   import type { PendingFile } from '../lib/types';
 
-  const MAX_SIZE = 20 * 1024 * 1024;
+  const MAX_SIZE = 50 * 1024 * 1024;
   const MAX_FILES = 5;
-  const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+  const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+  const ALLOWED_TYPES = new Set([
+    // Images
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    // PDF
+    'application/pdf',
+    // Office
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint',
+    // Text / code
+    'text/plain', 'text/csv', 'text/html', 'text/css', 'text/javascript',
+    'text/markdown', 'text/xml',
+    'application/json', 'application/xml',
+    // Archives
+    'application/zip', 'application/gzip', 'application/x-tar',
+    'application/x-7z-compressed', 'application/x-rar-compressed',
+  ]);
+  // Browsers often report empty or generic MIME for these extensions
+  const EXT_TO_MIME: Record<string, string> = {
+    md: 'text/markdown', markdown: 'text/markdown',
+    txt: 'text/plain', csv: 'text/csv', json: 'application/json',
+    xml: 'application/xml', html: 'text/html', css: 'text/css',
+    js: 'text/javascript', ts: 'text/plain', py: 'text/plain',
+    sh: 'text/plain', yaml: 'text/plain', yml: 'text/plain',
+    toml: 'text/plain', ini: 'text/plain', cfg: 'text/plain',
+    log: 'text/plain', sql: 'text/plain', rs: 'text/plain',
+    go: 'text/plain', java: 'text/plain', c: 'text/plain',
+    cpp: 'text/plain', h: 'text/plain', rb: 'text/plain',
+  };
+
+  function resolveType(file: File): string {
+    if (file.type && file.type !== 'application/octet-stream') return file.type;
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    return EXT_TO_MIME[ext] ?? file.type;
+  }
 
   let { onsend }: { onsend: (text: string, files: PendingFile[]) => void } = $props();
   let textarea: HTMLTextAreaElement;
@@ -39,29 +75,34 @@
     const files = Array.from(fileList);
     for (const file of files) {
       if (chatState.pendingFiles.length >= MAX_FILES) {
-        alert(t(chatState.lang, 'tooManyImages'));
+        alert(t(chatState.lang, 'tooManyFiles'));
         break;
       }
-      if (!ALLOWED_TYPES.has(file.type)) {
+      const mime = resolveType(file);
+      if (!ALLOWED_TYPES.has(mime)) {
         alert(t(chatState.lang, 'unsupportedType'));
         continue;
       }
       if (file.size > MAX_SIZE) {
-        alert(t(chatState.lang, 'imageTooLarge'));
+        alert(t(chatState.lang, 'fileTooLarge'));
         continue;
       }
       const id = crypto.randomUUID();
+      const isImage = IMAGE_TYPES.has(mime);
       chatState.pendingFiles.push({
         id,
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: isImage ? URL.createObjectURL(file) : '',
+        isImage,
       });
-      // Compress in background — preview shows immediately
-      chatState.pendingFiles[chatState.pendingFiles.length - 1].ready =
-        compressImage(file).then(compressed => {
-          const pf = chatState.pendingFiles.find(f => f.id === id);
-          if (pf) pf.file = compressed;
-        });
+      // Compress images in background — preview shows immediately
+      if (isImage) {
+        chatState.pendingFiles[chatState.pendingFiles.length - 1].ready =
+          compressImage(file).then(compressed => {
+            const pf = chatState.pendingFiles.find(f => f.id === id);
+            if (pf) pf.file = compressed;
+          });
+      }
     }
   }
 
@@ -76,7 +117,9 @@
   function removeFile(id: string) {
     const idx = chatState.pendingFiles.findIndex(f => f.id === id);
     if (idx >= 0) {
-      URL.revokeObjectURL(chatState.pendingFiles[idx].previewUrl);
+      if (chatState.pendingFiles[idx].isImage) {
+        URL.revokeObjectURL(chatState.pendingFiles[idx].previewUrl);
+      }
       chatState.pendingFiles.splice(idx, 1);
     }
   }
@@ -84,16 +127,16 @@
   function handlePaste(e: ClipboardEvent) {
     const items = e.clipboardData?.items;
     if (!items) return;
-    const imageFiles: File[] = [];
+    const pastedFiles: File[] = [];
     for (const item of items) {
-      if (item.type.startsWith('image/')) {
+      if (ALLOWED_TYPES.has(item.type)) {
         const file = item.getAsFile();
-        if (file) imageFiles.push(file);
+        if (file) pastedFiles.push(file);
       }
     }
-    if (imageFiles.length > 0) {
+    if (pastedFiles.length > 0) {
       e.preventDefault();
-      addFiles(imageFiles);
+      addFiles(pastedFiles);
     }
   }
 
@@ -105,8 +148,8 @@
     e.preventDefault();
     const files = e.dataTransfer?.files;
     if (files) {
-      const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-      if (imageFiles.length > 0) addFiles(imageFiles);
+      const validFiles = Array.from(files).filter(f => ALLOWED_TYPES.has(f.type));
+      if (validFiles.length > 0) addFiles(validFiles);
     }
   }
 
@@ -121,20 +164,26 @@
     <div class="preview-strip">
       {#each chatState.pendingFiles as pf (pf.id)}
         <div class="preview-thumb">
-          <img src={pf.previewUrl} alt={pf.file.name} />
-          <button class="remove-btn" onclick={() => removeFile(pf.id)} aria-label={t(chatState.lang, 'removeImage')}>&times;</button>
+          {#if pf.isImage}
+            <img src={pf.previewUrl} alt={pf.file.name} />
+          {:else}
+            <div class="file-icon" title={pf.file.name}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span class="file-ext">{pf.file.name.split('.').pop()}</span>
+            </div>
+          {/if}
+          <button class="remove-btn" onclick={() => removeFile(pf.id)} aria-label={t(chatState.lang, 'removeFile')}>&times;</button>
         </div>
       {/each}
     </div>
   {/if}
   <form onsubmit={handleSubmit}>
-    <button type="button" class="attach-btn" onclick={() => fileInput.click()} title={t(chatState.lang, 'attachImage')}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+    <button type="button" class="attach-btn" onclick={() => fileInput.click()} title={t(chatState.lang, 'attachFile')}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
     </button>
     <input
       bind:this={fileInput}
       type="file"
-      accept="image/jpeg,image/png,image/gif,image/webp"
       multiple
       hidden
       onchange={handleFileSelect}
@@ -180,6 +229,26 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  .file-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg2);
+    color: var(--text2);
+    gap: 2px;
+  }
+  .file-ext {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    max-width: 56px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .remove-btn {
     position: absolute;

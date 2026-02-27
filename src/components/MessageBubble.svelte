@@ -5,9 +5,24 @@
   import { t } from '../lib/i18n';
   import TypingIndicator from './TypingIndicator.svelte';
 
+  const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
   let { message }: { message: DisplayMessage } = $props();
 
   let copied = $state(false);
+
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+  }
+
+  const imageAttachments = $derived(
+    (message.attachments ?? []).filter(a => IMAGE_TYPES.has(a.content_type))
+  );
+  const fileAttachments = $derived(
+    (message.attachments ?? []).filter(a => !IMAGE_TYPES.has(a.content_type))
+  );
 
   function copyMessage() {
     navigator.clipboard.writeText(message.content);
@@ -23,11 +38,22 @@
 {#if message.role === 'user'}
   <div class="msg-wrap msg-wrap-user">
     <div class="msg msg-user">
-      {#if message.attachments && message.attachments.length > 0}
+      {#if imageAttachments.length > 0}
         <div class="msg-images">
-          {#each message.attachments as att}
+          {#each imageAttachments as att}
             <a href={att.url} target="_blank" rel="noopener noreferrer">
               <img src={att.url} alt={att.filename} class="msg-image" />
+            </a>
+          {/each}
+        </div>
+      {/if}
+      {#if fileAttachments.length > 0}
+        <div class="msg-files">
+          {#each fileAttachments as att}
+            <a class="file-link" href={att.url} target="_blank" rel="noopener noreferrer" download={att.filename}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span class="file-link-name">{att.filename}</span>
+              <span class="file-link-size">({formatSize(att.size)})</span>
             </a>
           {/each}
         </div>
@@ -102,8 +128,44 @@
     gap: 6px;
     margin-bottom: 6px;
   }
-  .msg-images:last-child {
+  .msg-images:last-child,
+  .msg-files:last-child {
     margin-bottom: 0;
+  }
+  .msg-files {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .file-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.08);
+    color: inherit;
+    text-decoration: none;
+    font-size: 13px;
+    max-width: 100%;
+  }
+  .file-link:hover {
+    background: rgba(0, 0, 0, 0.14);
+  }
+  .file-link-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .file-link-size {
+    flex-shrink: 0;
+    opacity: 0.7;
+    font-size: 12px;
+  }
+  .file-link svg {
+    flex-shrink: 0;
   }
   .msg-image {
     max-width: 200px;
