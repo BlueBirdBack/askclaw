@@ -16,6 +16,7 @@ class ChatState {
   chatList: ChatSummary[] = $state([]);
   scrollToMessageIndex: number | null = $state(null);
   availableModels: ModelInfo[] = $state([]);
+  abortController: AbortController | null = $state(null);
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -43,6 +44,9 @@ class ChatState {
   }
 
   newChat() {
+    this.abortController?.abort();
+    this.abortController = null;
+    this.streaming = false;
     this.messages = [];
     this.history = [];
     this.currentChatId = null;
@@ -90,6 +94,9 @@ class ChatState {
   }
 
   loadChat(detail: ChatDetail, targetMessageId?: number) {
+    this.abortController?.abort();
+    this.abortController = null;
+    this.streaming = false;
     this.messages = detail.messages.map((m) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,

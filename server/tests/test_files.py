@@ -27,7 +27,7 @@ def test_single_upload(test_env):
     assert item["size"] == 256
     assert item["url"].startswith("/api/files/")
     assert item["id"]
-    assert item["storage_path"]  # new field returned
+    assert "storage_path" not in item  # never expose server paths
 
 
 def test_multiple_upload(test_env):

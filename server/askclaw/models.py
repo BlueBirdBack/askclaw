@@ -1,18 +1,20 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 # --- Chats ---
 
 class ChatCreate(BaseModel):
-    id: str
-    model: str = "openclaw:main"
-    title: str = ""
+    id: str = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    model: str = Field(default="openclaw:main", max_length=100)
+    title: str = Field(default="", max_length=200)
 
 
 class ChatUpdate(BaseModel):
-    title: str | None = None
+    title: str | None = Field(default=None, max_length=200)
     category_id: int | None = None
-    tag_ids: list[int] | None = None
+    tag_ids: list[int] | None = Field(default=None, max_length=20)
 
 
 class AttachmentOut(BaseModel):
@@ -21,13 +23,12 @@ class AttachmentOut(BaseModel):
     content_type: str
     size: int
     url: str
-    storage_path: str | None = None
 
 
 class MessageIn(BaseModel):
-    role: str
-    content: str
-    attachment_ids: list[str] = []
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=500_000)
+    attachment_ids: list[str] = Field(default=[], max_length=10)
 
 
 class MessagesAppend(BaseModel):
@@ -59,13 +60,13 @@ class ChatDetail(ChatSummary):
 # --- Categories ---
 
 class CategoryCreate(BaseModel):
-    name: str
-    sort_order: int = 0
+    name: str = Field(min_length=1, max_length=100)
+    sort_order: int = Field(default=0, ge=-1000, le=1000)
 
 
 class CategoryUpdate(BaseModel):
-    name: str | None = None
-    sort_order: int | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    sort_order: int | None = Field(default=None, ge=-1000, le=1000)
 
 
 class CategoryOut(BaseModel):
@@ -77,13 +78,13 @@ class CategoryOut(BaseModel):
 # --- Tags ---
 
 class TagCreate(BaseModel):
-    name: str
-    color: str = "#6b7280"
+    name: str = Field(min_length=1, max_length=50)
+    color: str = Field(default="#6b7280", pattern=r"^#[0-9a-fA-F]{6}$")
 
 
 class TagUpdate(BaseModel):
-    name: str | None = None
-    color: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=50)
+    color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
 
 
 class TagOut(BaseModel):
@@ -106,7 +107,7 @@ class SearchResult(BaseModel):
 
 class PasswordChange(BaseModel):
     current_password: str
-    new_password: str
+    new_password: str = Field(min_length=8, max_length=200)
 
 
 # --- Models ---

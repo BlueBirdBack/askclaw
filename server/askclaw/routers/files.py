@@ -12,6 +12,8 @@ from ..models import AttachmentOut
 
 router = APIRouter(prefix="/files", tags=["files"])
 
+CHUNK_SIZE = 64 * 1024  # 64 KB
+
 
 def _resolve_content_type(upload: UploadFile) -> str:
     """Return the best content type, falling back to extension-based guess."""
@@ -44,39 +46,52 @@ async def upload_files(
             if content_type not in settings.allowed_file_types:
                 raise HTTPException(400, f"Unsupported file type: {content_type}")
 
-            data = await f.read()
-            if len(data) > settings.max_file_size:
-                raise HTTPException(400, f"File too large: {f.filename} ({len(data)} bytes)")
-
             file_id = str(uuid.uuid4())
             original_name = f.filename or "file"
             ext = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else "bin"
             storage_name = f"{file_id}.{ext}"
             storage_path = user_dir / storage_name
 
-            storage_path.write_bytes(data)
+            # Stream upload to disk in chunks, abort if size exceeds limit
+            total_size = 0
+            try:
+                with open(storage_path, "wb") as out:
+                    while True:
+                        chunk = await f.read(CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        total_size += len(chunk)
+                        if total_size > settings.max_file_size:
+                            out.close()
+                            storage_path.unlink(missing_ok=True)
+                            raise HTTPException(400, f"File too large: {original_name}")
+                        out.write(chunk)
+            except HTTPException:
+                raise
+            except Exception:
+                storage_path.unlink(missing_ok=True)
+                raise HTTPException(500, "Upload failed")
 
             conn.execute(
                 "INSERT INTO attachments (id, username, filename, content_type, size, storage_path) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (file_id, username, original_name, content_type, len(data), str(storage_path)),
+                (file_id, username, original_name, content_type, total_size, str(storage_path)),
             )
 
             results.append(AttachmentOut(
                 id=file_id,
                 filename=original_name,
                 content_type=content_type,
-                size=len(data),
+                size=total_size,
                 url=f"/api/files/{file_id}",
-                storage_path=str(storage_path),
             ))
 
         conn.commit()
         return results
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(500, f"Upload failed: {e}")
+    except Exception:
+        raise HTTPException(500, "Upload failed")
     finally:
         conn.close()
 
@@ -96,6 +111,11 @@ def get_file(
             raise HTTPException(404, "File not found")
 
         path = Path(row["storage_path"])
+
+        # Path traversal guard
+        if not path.resolve().is_relative_to(Path(settings.upload_dir).resolve()):
+            raise HTTPException(403, "Access denied")
+
         if not path.exists():
             raise HTTPException(404, "File not found on disk")
 

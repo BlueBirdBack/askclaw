@@ -180,6 +180,25 @@ def update_chat(
         if not existing:
             raise HTTPException(404, "Chat not found")
 
+        # Verify category belongs to this user
+        if body.category_id is not None:
+            row = conn.execute(
+                "SELECT id FROM categories WHERE id = ? AND username = ?",
+                (body.category_id, username),
+            ).fetchone()
+            if not row:
+                raise HTTPException(403, "Category not found")
+
+        # Verify all tags belong to this user
+        if body.tag_ids is not None:
+            for tid in body.tag_ids:
+                row = conn.execute(
+                    "SELECT id FROM tags WHERE id = ? AND username = ?",
+                    (tid, username),
+                ).fetchone()
+                if not row:
+                    raise HTTPException(403, "Tag not found")
+
         sets = []
         params: list = []
         if body.title is not None:

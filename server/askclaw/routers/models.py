@@ -1,8 +1,9 @@
 import json
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from ..auth import get_current_user
 from ..config import settings
 from ..models import ModelOut
 
@@ -34,12 +35,12 @@ def _display_name(model_str: str) -> str:
 
 
 @router.get("/models")
-async def list_models() -> list[ModelOut]:
+async def list_models(username: str = Depends(get_current_user)) -> list[ModelOut]:
     try:
         with open(settings.openclaw_config) as f:
             config = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+    except (FileNotFoundError, json.JSONDecodeError):
+        raise HTTPException(status_code=503, detail="Model configuration unavailable")
 
     agents = config.get("agents", {}).get("list", [])
     return [

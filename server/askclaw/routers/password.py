@@ -1,6 +1,6 @@
+import fcntl
 import hashlib
 import secrets
-import subprocess
 from pathlib import Path
 
 import bcrypt
@@ -118,9 +118,8 @@ def _verify_password(password: str, stored_hash: str) -> bool:
 
 
 def _make_hash(password: str) -> str:
-    """Generate a new $apr1$ hash for consistency with existing entries."""
-    salt = "".join(secrets.choice(_ITOA64) for _ in range(8))
-    return _apr1_hash(password, salt)
+    """Generate a new bcrypt hash."""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 @router.post("")
@@ -128,18 +127,29 @@ def change_password(
     body: PasswordChange,
     username: str = Depends(get_current_user),
 ):
-    entries = _read_htpasswd()
-    if not entries:
+    htpasswd_path = Path(settings.htpasswd_path)
+    if not htpasswd_path.exists():
         raise HTTPException(500, "htpasswd file not found or empty")
 
-    if username not in entries:
-        raise HTTPException(404, "User not found in htpasswd")
+    # Use file locking to prevent TOCTOU race conditions
+    with open(htpasswd_path, "r+") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            # Re-read inside lock to get latest state
+            entries = _read_htpasswd()
+            if not entries:
+                raise HTTPException(500, "htpasswd file not found or empty")
 
-    stored_hash = entries[username]
-    if not _verify_password(body.current_password, stored_hash):
-        raise HTTPException(403, "Current password is incorrect")
+            if username not in entries:
+                raise HTTPException(404, "User not found in htpasswd")
 
-    entries[username] = _make_hash(body.new_password)
-    _write_htpasswd(entries)
+            stored_hash = entries[username]
+            if not _verify_password(body.current_password, stored_hash):
+                raise HTTPException(403, "Current password is incorrect")
+
+            entries[username] = _make_hash(body.new_password)
+            _write_htpasswd(entries)
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
     return {"ok": True}

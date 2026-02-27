@@ -73,7 +73,14 @@
     if (isFirstMessage) {
       const chatId = crypto.randomUUID();
       chatState.currentChatId = chatId;
-      createChat(chatId, chatState.model).catch(() => {});
+      try {
+        await createChat(chatId, chatState.model);
+      } catch {
+        chatState.uploading = false;
+        chatState.currentChatId = null;
+        chatState.addError(t(chatState.lang, 'errGeneric').replace('{code}', 'chat'));
+        return;
+      }
     }
 
     // Upload all files to backend and get server attachments
@@ -94,6 +101,9 @@
     chatState.addAssistantPlaceholder();
     chatState.streaming = true;
 
+    const controller = new AbortController();
+    chatState.abortController = controller;
+
     const userText = text;
 
     // Build LLM messages: copy history but replace the last user message with multimodal content
@@ -108,7 +118,7 @@
       for (const att of nonImageAttachments) {
         blocks.push({
           type: 'input_text',
-          text: `[Attached file: ${att.filename} (${att.content_type}, ${formatSize(att.size)}) at ${att.storage_path}]`,
+          text: `[Attached file: ${att.filename} (${att.content_type}, ${formatSize(att.size)})]`,
         });
       }
 
@@ -140,6 +150,7 @@
           }
           chatState.finalizeAssistant(full);
           chatState.streaming = false;
+          chatState.abortController = null;
           chatInput.focus();
 
           // Save user + assistant messages to backend
@@ -147,12 +158,15 @@
             saveMessages(chatState.currentChatId, [
               { role: 'user', content: userText, attachment_ids: attachments.map(a => a.id) },
               { role: 'assistant', content: full },
-            ]).then(() => sidebar?.refresh()).catch(() => {});
+            ]).then(() => sidebar?.refresh()).catch(() => {
+              chatState.addError(t(chatState.lang, 'errGeneric').replace('{code}', 'save'));
+            });
           }
         },
         onError(code) {
           chatState.removeLastAssistant();
           chatState.rollbackLastUser();
+          chatState.abortController = null;
           let msg: string;
           if (code === 'network') {
             msg = t(chatState.lang, 'errNetwork');
@@ -168,6 +182,7 @@
           chatInput.focus();
         },
       },
+      controller.signal,
     );
   }
 </script>

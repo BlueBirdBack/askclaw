@@ -14,7 +14,6 @@ export interface Attachment {
   content_type: string;
   size: number;
   url: string;
-  storage_path?: string;
 }
 
 export interface PendingFile {
