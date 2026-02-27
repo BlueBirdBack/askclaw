@@ -5,6 +5,7 @@ class ChatState {
   model: Model = $state('openclaw:main');
   messages: DisplayMessage[] = $state([]);
   history: ChatMessage[] = $state([]);
+  uploading: boolean = $state(false);
   streaming: boolean = $state(false);
   username: string = $state('web');
   currentChatId: string | null = $state(null);

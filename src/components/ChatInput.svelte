@@ -197,8 +197,12 @@
       onkeydown={handleKeydown}
       onpaste={handlePaste}
     ></textarea>
-    <button type="submit" disabled={chatState.streaming} aria-label="Send">
-      &#8593;
+    <button type="submit" disabled={chatState.streaming || chatState.uploading} aria-label="Send">
+      {#if chatState.uploading}
+        <span class="spinner"></span>
+      {:else}
+        &#8593;
+      {/if}
     </button>
   </form>
 </div>
@@ -330,5 +334,16 @@
   button[type="submit"]:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>

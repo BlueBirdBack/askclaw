@@ -28,7 +28,10 @@
   }
 
   async function handleSend(text: string, files: PendingFile[]) {
-    if (chatState.streaming) return;
+    if (chatState.streaming || chatState.uploading) return;
+
+    const hasFiles = files.length > 0;
+    if (hasFiles) chatState.uploading = true;
 
     // Wait for any in-progress compressions to finish
     await Promise.all(files.map(f => f.ready));
@@ -71,10 +74,13 @@
       try {
         attachments = await uploadFiles(allRawFiles);
       } catch {
+        chatState.uploading = false;
         chatState.addError(t(chatState.lang, 'uploadFailed'));
         return;
       }
     }
+
+    chatState.uploading = false;
 
     chatState.addUserMessage(text, attachments.length > 0 ? attachments : undefined);
     chatState.addAssistantPlaceholder();
