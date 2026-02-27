@@ -24,6 +24,9 @@
   async function handleSend(text: string, files: PendingFile[]) {
     if (chatState.streaming) return;
 
+    // Wait for any in-progress compressions to finish
+    await Promise.all(files.map(f => f.ready));
+
     // Extract raw File objects from proxy wrappers immediately
     const rawFiles: File[] = files.map(pf => pf.file);
 

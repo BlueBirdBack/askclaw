@@ -14,6 +14,7 @@ export interface PendingFile {
   id: string;
   file: File;
   previewUrl: string;
+  ready?: Promise<void>;
 }
 
 export type ContentBlock =

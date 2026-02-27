@@ -35,7 +35,7 @@
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   }
 
-  async function addFiles(fileList: FileList | File[]) {
+  function addFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList);
     for (const file of files) {
       if (chatState.pendingFiles.length >= MAX_FILES) {
@@ -50,12 +50,18 @@
         alert(t(chatState.lang, 'imageTooLarge'));
         continue;
       }
-      const compressed = await compressImage(file);
+      const id = crypto.randomUUID();
       chatState.pendingFiles.push({
-        id: crypto.randomUUID(),
-        file: compressed,
-        previewUrl: URL.createObjectURL(compressed),
+        id,
+        file,
+        previewUrl: URL.createObjectURL(file),
       });
+      // Compress in background — preview shows immediately
+      chatState.pendingFiles[chatState.pendingFiles.length - 1].ready =
+        compressImage(file).then(compressed => {
+          const pf = chatState.pendingFiles.find(f => f.id === id);
+          if (pf) pf.file = compressed;
+        });
     }
   }
 
