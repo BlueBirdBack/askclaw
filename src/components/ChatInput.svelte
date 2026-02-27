@@ -29,6 +29,12 @@
   const EXT_TO_MIME: Record<string, string> = {
     md: 'text/markdown', markdown: 'text/markdown',
     txt: 'text/plain', csv: 'text/csv', json: 'application/json',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     xml: 'application/xml', html: 'text/html', css: 'text/css',
     js: 'text/javascript', ts: 'text/plain', py: 'text/plain',
     sh: 'text/plain', yaml: 'text/plain', yml: 'text/plain',
