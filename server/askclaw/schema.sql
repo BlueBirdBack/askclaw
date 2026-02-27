@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS attachments (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(message_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_user ON attachments(username);
 
 -- FTS5 external content table linked to messages
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
@@ -64,7 +65,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
     chat_id UNINDEXED,
     content=messages,
     content_rowid=id,
-    tokenize='unicode61'
+    tokenize='trigram'
 );
 
 -- Triggers to keep FTS in sync with messages

@@ -9,6 +9,7 @@
   let searchResults: SearchResult[] = $state([]);
   let searching = $state(false);
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  let composing = $state(false);
 
   onMount(() => {
     loadChats();
@@ -36,8 +37,9 @@
 
   function handleSearchInput() {
     clearTimeout(debounceTimer);
+    if (composing) return; // Skip during IME composition
     const q = searchQuery.trim();
-    if (!q) {
+    if (q.length < 2) {
       searchResults = [];
       searching = false;
       return;
@@ -122,6 +124,8 @@
       placeholder={t(chatState.lang, 'searchChats')}
       bind:value={searchQuery}
       oninput={handleSearchInput}
+      oncompositionstart={() => composing = true}
+      oncompositionend={() => { composing = false; handleSearchInput(); }}
     />
   </div>
 

@@ -32,7 +32,7 @@ def _snippet_around(text: str, query: str, context: int = 40) -> str:
 
 @router.get("", response_model=list[SearchResult])
 def search_messages(
-    q: str = Query(..., min_length=1),
+    q: str = Query(..., min_length=2),
     username: str = Depends(get_current_user),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -44,38 +44,41 @@ def search_messages(
         seen_chat_ids: set[str] = set()
         like_q = f"%{q}%"
 
-        # 1) FTS5 full-text search on message content
-        fts_rows = conn.execute(
-            "SELECT "
-            "  fts.chat_id, "
-            "  c.title AS chat_title, "
-            "  fts.rowid AS message_id, "
-            "  m.role, "
-            "  highlight(messages_fts, 0, '<mark>', '</mark>') AS snippet "
-            "FROM messages_fts fts "
-            "JOIN chats c ON c.id = fts.chat_id "
-            "JOIN messages m ON m.id = fts.rowid "
-            "WHERE messages_fts MATCH ? AND c.username = ? "
-            "ORDER BY rank "
-            "LIMIT ? OFFSET ?",
-            (q, username, limit, offset),
-        ).fetchall()
+        # 1) FTS5 trigram search on message content (handles CJK + Latin)
+        #    Trigram tokenizer requires queries >= 3 chars; wrap in quotes for
+        #    substring matching.
+        if len(q) >= 3:
+            fts_q = '"' + q.replace('"', '""') + '"'
+            fts_rows = conn.execute(
+                "SELECT "
+                "  fts.chat_id, "
+                "  c.title AS chat_title, "
+                "  fts.rowid AS message_id, "
+                "  m.role, "
+                "  highlight(messages_fts, 0, '<mark>', '</mark>') AS snippet "
+                "FROM messages_fts fts "
+                "JOIN chats c ON c.id = fts.chat_id "
+                "JOIN messages m ON m.id = fts.rowid "
+                "WHERE messages_fts MATCH ? AND c.username = ? "
+                "ORDER BY rank "
+                "LIMIT ? OFFSET ?",
+                (fts_q, username, limit, offset),
+            ).fetchall()
 
-        for r in fts_rows:
-            seen_chat_ids.add(r["chat_id"])
-            seen_msg_ids.add(r["message_id"])
-            results.append(
-                SearchResult(
-                    chat_id=r["chat_id"],
-                    chat_title=r["chat_title"],
-                    message_id=r["message_id"],
-                    role=r["role"],
-                    snippet=r["snippet"],
+            for r in fts_rows:
+                seen_chat_ids.add(r["chat_id"])
+                seen_msg_ids.add(r["message_id"])
+                results.append(
+                    SearchResult(
+                        chat_id=r["chat_id"],
+                        chat_title=r["chat_title"],
+                        message_id=r["message_id"],
+                        role=r["role"],
+                        snippet=r["snippet"],
+                    )
                 )
-            )
-
-        # 1b) LIKE fallback for CJK and other text FTS misses
-        if len(results) < limit:
+        else:
+            # Short queries (1-2 chars): LIKE fallback since trigram needs >= 3
             like_rows = conn.execute(
                 "SELECT m.id AS message_id, m.chat_id, c.title AS chat_title, "
                 "  m.role, m.content "
@@ -87,24 +90,20 @@ def search_messages(
             ).fetchall()
 
             for r in like_rows:
-                if r["message_id"] not in seen_msg_ids:
-                    seen_msg_ids.add(r["message_id"])
-                    seen_chat_ids.add(r["chat_id"])
-                    # Extract a short snippet around the match
-                    content = r["content"]
-                    snippet = _snippet_around(content, q)
-                    results.append(
-                        SearchResult(
-                            chat_id=r["chat_id"],
-                            chat_title=r["chat_title"],
-                            message_id=r["message_id"],
-                            role=r["role"],
-                            snippet=snippet,
-                        )
+                seen_msg_ids.add(r["message_id"])
+                seen_chat_ids.add(r["chat_id"])
+                snippet = _snippet_around(r["content"], q)
+                results.append(
+                    SearchResult(
+                        chat_id=r["chat_id"],
+                        chat_title=r["chat_title"],
+                        message_id=r["message_id"],
+                        role=r["role"],
+                        snippet=snippet,
                     )
+                )
 
-        # 2) Chat title LIKE search (only chats not already matched by FTS)
-        like_q = f"%{q}%"
+        # 2) Chat title LIKE search
         title_rows = conn.execute(
             "SELECT id, title FROM chats "
             "WHERE username = ? AND title LIKE ? COLLATE NOCASE "
