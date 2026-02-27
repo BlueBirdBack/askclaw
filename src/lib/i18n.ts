@@ -47,6 +47,12 @@ const strings: Record<Lang, I18nStrings> = {
     tooManyFiles: '最多 5 个文件',
     unsupportedType: '不支持的文件格式',
     settings: '设置',
+    chatHistory: '对话记录',
+    searchChats: '搜索对话...',
+    noChats: '暂无对话',
+    deleteChat: '删除对话',
+    confirmDelete: '确定要删除这个对话吗？',
+    untitled: '新对话',
   },
   en: {
     title: 'Ask Claw',
@@ -94,6 +100,12 @@ By continuing to use this service, you acknowledge that you have read, understoo
     tooManyFiles: 'Maximum 5 files',
     unsupportedType: 'Unsupported file type',
     settings: 'Settings',
+    chatHistory: 'Chat history',
+    searchChats: 'Search chats...',
+    noChats: 'No chats yet',
+    deleteChat: 'Delete chat',
+    confirmDelete: 'Delete this chat?',
+    untitled: 'New chat',
   },
 };
 

@@ -5,6 +5,7 @@
   import { fetchUsername, streamChat, createChat, saveMessages, uploadFiles, readFileAsBase64 } from './lib/api';
   import type { ChatMessage, PendingFile, Attachment, ContentBlock } from './lib/types';
   import Header from './components/Header.svelte';
+  import Sidebar from './components/Sidebar.svelte';
   import WarningBanner from './components/WarningBanner.svelte';
   import TosModal from './components/TosModal.svelte';
   import PasswordModal from './components/PasswordModal.svelte';
@@ -14,6 +15,7 @@
   let tosOpen = $state(false);
   let passwordOpen = $state(false);
   let chatInput: ChatInput;
+  let sidebar: Sidebar;
 
   onMount(() => {
     chatState.setLang(chatState.lang);
@@ -139,7 +141,7 @@
             saveMessages(chatState.currentChatId, [
               { role: 'user', content: userText, attachment_ids: attachments.map(a => a.id) },
               { role: 'assistant', content: full },
-            ]).catch(() => {});
+            ]).then(() => sidebar?.refresh()).catch(() => {});
           }
         },
         onError(code) {
@@ -164,11 +166,17 @@
   }
 </script>
 
-<div id="shell">
-  <Header onopenpassword={() => passwordOpen = true} onopentos={() => tosOpen = true} />
-  <WarningBanner onopentos={() => tosOpen = true} />
-  <MessageList />
-  <ChatInput bind:this={chatInput} onsend={handleSend} />
+<div id="app-layout">
+  <Sidebar bind:this={sidebar} />
+  {#if chatState.sidebarOpen}
+    <button class="sidebar-overlay open" aria-label="Close sidebar" onclick={() => chatState.sidebarOpen = false}></button>
+  {/if}
+  <div id="shell">
+    <Header onopenpassword={() => passwordOpen = true} onopentos={() => tosOpen = true} />
+    <WarningBanner onopentos={() => tosOpen = true} />
+    <MessageList />
+    <ChatInput bind:this={chatInput} onsend={handleSend} />
+  </div>
 </div>
 
 <TosModal open={tosOpen} onclose={() => tosOpen = false} />
@@ -179,7 +187,7 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    max-width: 760px;
-    margin: 0 auto;
+    flex: 1;
+    min-width: 0;
   }
 </style>

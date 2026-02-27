@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { chatState } from '../lib/state.svelte';
   import MessageBubble from './MessageBubble.svelte';
   import Welcome from './Welcome.svelte';
@@ -12,12 +13,31 @@
     if (chatState.messages.length > 0) {
       chatState.messages[chatState.messages.length - 1].content;
     }
-    scrollToBottom();
+
+    // Read without tracking to avoid re-trigger when we clear it
+    const targetIdx = untrack(() => chatState.scrollToMessageIndex);
+
+    if (targetIdx !== null) {
+      // Wait for DOM to render, then scroll to the target message
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          chatState.scrollToMessageIndex = null;
+          if (!container) return;
+          const target = container.querySelector(`[data-msg-index="${targetIdx}"]`) as HTMLElement | null;
+          if (target) {
+            target.scrollIntoView({ block: 'center', behavior: 'instant' });
+            target.classList.add('highlight-flash');
+            setTimeout(() => target.classList.remove('highlight-flash'), 1500);
+          }
+        });
+      });
+    } else {
+      scrollToBottom();
+    }
   });
 
   function scrollToBottom() {
     if (container) {
-      // Use tick-like delay so DOM updates first
       requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight;
       });
@@ -29,8 +49,10 @@
   {#if !chatState.hasMessages}
     <Welcome />
   {:else}
-    {#each chatState.messages as message}
-      <MessageBubble {message} />
+    {#each chatState.messages as message, i}
+      <div data-msg-index={i}>
+        <MessageBubble {message} />
+      </div>
     {/each}
   {/if}
 </div>

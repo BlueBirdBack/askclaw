@@ -1,4 +1,5 @@
 import type { Lang, Model, ChatMessage, DisplayMessage, Attachment, PendingFile } from './types';
+import type { ChatSummary, ChatDetail } from './api';
 
 class ChatState {
   lang: Lang = $state((localStorage.getItem('askclaw_lang') as Lang) || 'zh');
@@ -11,6 +12,9 @@ class ChatState {
   currentChatId: string | null = $state(null);
   pendingFiles: PendingFile[] = $state([]);
   warningDismissed: boolean = $state(localStorage.getItem('askclaw_warning_dismissed') === '1');
+  sidebarOpen: boolean = $state(window.innerWidth >= 768);
+  chatList: ChatSummary[] = $state([]);
+  scrollToMessageIndex: number | null = $state(null);
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -77,6 +81,32 @@ class ChatState {
   rollbackLastUser() {
     if (this.history.length && this.history[this.history.length - 1].role === 'user') {
       this.history.pop();
+    }
+  }
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  loadChat(detail: ChatDetail, targetMessageId?: number) {
+    this.messages = detail.messages.map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+      attachments: m.attachments,
+    }));
+    this.history = detail.messages.map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
+    this.currentChatId = detail.id;
+    this.model = detail.model as Model;
+    this.clearPendingFiles();
+
+    if (targetMessageId) {
+      const idx = detail.messages.findIndex((m) => m.id === targetMessageId);
+      this.scrollToMessageIndex = idx >= 0 ? idx : null;
+    } else {
+      this.scrollToMessageIndex = null;
     }
   }
 

@@ -1,4 +1,4 @@
-import type { Attachment, ChatMessage, Model } from './types';
+import type { Attachment, ChatMessage, Model, SearchResult } from './types';
 
 // --- Password ---
 
@@ -101,6 +101,17 @@ export interface ChatDetail extends ChatSummary {
 export async function fetchChat(id: string): Promise<ChatDetail | null> {
   const resp = await fetch(`/api/chats/${id}`);
   if (!resp.ok) return null;
+  return resp.json();
+}
+
+export async function deleteChat(id: string): Promise<boolean> {
+  const resp = await fetch(`/api/chats/${id}`, { method: 'DELETE' });
+  return resp.ok;
+}
+
+export async function searchMessages(q: string): Promise<SearchResult[]> {
+  const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  if (!resp.ok) return [];
   return resp.json();
 }
 

@@ -68,4 +68,18 @@ export interface I18nStrings {
   tooManyFiles: string;
   unsupportedType: string;
   settings: string;
+  chatHistory: string;
+  searchChats: string;
+  noChats: string;
+  deleteChat: string;
+  confirmDelete: string;
+  untitled: string;
+}
+
+export interface SearchResult {
+  chat_id: string;
+  chat_title: string;
+  message_id: number;
+  role: string;
+  snippet: string;
 }

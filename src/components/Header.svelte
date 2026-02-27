@@ -8,14 +8,18 @@
 </script>
 
 <header>
-  <h1>{t(chatState.lang, 'title')}</h1>
+  <div class="left">
+    <button class="hamburger" aria-label="Toggle sidebar" onclick={() => chatState.toggleSidebar()}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h18M3 6h18M3 18h18" />
+      </svg>
+    </button>
+    <h1>{t(chatState.lang, 'title')}</h1>
+  </div>
   <div class="actions">
     {#if chatState.hasMessages}
       <ExportMenu messages={chatState.messages} />
     {/if}
-    <button onclick={() => chatState.newChat()}>
-      {t(chatState.lang, 'newChat')}
-    </button>
     <SettingsMenu {onopenpassword} {onopentos} />
   </div>
 </header>
@@ -29,6 +33,11 @@
     justify-content: space-between;
     flex-shrink: 0;
   }
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   h1 {
     font-size: 18px;
     font-weight: 600;
@@ -37,17 +46,23 @@
     display: flex;
     gap: 6px;
   }
-  button {
+  .hamburger {
     background: none;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text2);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
     cursor: pointer;
-    font-family: inherit;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
   }
-  button:hover {
+  .hamburger:hover {
     background: var(--bg2);
+  }
+  /* Hide hamburger on desktop — sidebar is always visible */
+  @media (min-width: 768px) {
+    .hamburger {
+      display: none;
+    }
   }
 </style>

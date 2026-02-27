@@ -24,6 +24,8 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   --warning-bg: #fef3cd;
   --warning-text: #664d03;
+  --sidebar-width: 280px;
+  --sidebar-bg: #f8f8f8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +49,7 @@
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     --warning-bg: #3b2f00;
     --warning-text: #ffd666;
+    --sidebar-bg: #111111;
   }
 }
 
@@ -132,6 +135,49 @@ body {
 .msg-assistant th {
   background: var(--code-bg);
   font-weight: 600;
+}
+
+/* App layout */
+#app-layout {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#app-layout #shell {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Sidebar overlay backdrop on mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .sidebar-overlay.open {
+    display: block;
+  }
+}
+
+/* Search result highlight flash */
+@keyframes highlight-flash {
+  0% { background: var(--accent); opacity: 0.2; border-radius: 12px; }
+  100% { background: transparent; opacity: 1; }
+}
+.highlight-flash {
+  animation: highlight-flash 1.5s ease-out;
 }
 
 /* Typing indicator animation */
