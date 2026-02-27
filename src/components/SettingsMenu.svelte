@@ -22,19 +22,19 @@
 
   {#if open}
     <div class="dropdown">
-      <div class="row">
-        <span class="label">{chatState.lang === 'zh' ? '模型' : 'Model'}</span>
-        <div class="btn-group">
-          <button
-            class:active={chatState.model === 'openclaw:main'}
-            onclick={() => chatState.model = 'openclaw:main'}
-          >Sonnet</button>
-          <button
-            class:active={chatState.model === 'openclaw:opus'}
-            onclick={() => chatState.model = 'openclaw:opus'}
-          >Opus</button>
+      {#if chatState.availableModels.length > 0}
+        <div class="row">
+          <span class="label">{chatState.lang === 'zh' ? '模型' : 'Model'}</span>
+          <div class="btn-group">
+            {#each chatState.availableModels as m}
+              <button
+                class:active={chatState.model === `openclaw:${m.id}`}
+                onclick={() => chatState.model = `openclaw:${m.id}`}
+              >{m.name}</button>
+            {/each}
+          </div>
         </div>
-      </div>
+      {/if}
 
       <div class="row">
         <span class="label">{chatState.lang === 'zh' ? '语言' : 'Language'}</span>

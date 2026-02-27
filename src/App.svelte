@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { chatState } from './lib/state.svelte';
   import { t } from './lib/i18n';
-  import { fetchUsername, streamChat, createChat, saveMessages, uploadFiles, readFileAsBase64 } from './lib/api';
+  import { fetchUsername, fetchModels, streamChat, createChat, saveMessages, uploadFiles, readFileAsBase64 } from './lib/api';
   import type { ChatMessage, PendingFile, Attachment, ContentBlock } from './lib/types';
   import Header from './components/Header.svelte';
   import Sidebar from './components/Sidebar.svelte';
@@ -20,6 +20,12 @@
   onMount(() => {
     chatState.setLang(chatState.lang);
     fetchUsername().then((u) => (chatState.username = u));
+    fetchModels().then((models) => {
+      chatState.availableModels = models;
+      if (models.length > 0 && !models.some((m) => `openclaw:${m.id}` === chatState.model)) {
+        chatState.model = `openclaw:${models[0].id}`;
+      }
+    });
     chatInput.focus();
   });
 

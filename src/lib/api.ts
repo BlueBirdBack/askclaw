@@ -1,4 +1,4 @@
-import type { Attachment, ChatMessage, Model, SearchResult } from './types';
+import type { Attachment, ChatMessage, Model, ModelInfo, SearchResult } from './types';
 
 // --- Password ---
 
@@ -113,6 +113,16 @@ export async function searchMessages(q: string): Promise<SearchResult[]> {
   const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
   if (!resp.ok) return [];
   return resp.json();
+}
+
+export async function fetchModels(): Promise<ModelInfo[]> {
+  try {
+    const resp = await fetch('/api/models');
+    if (!resp.ok) return [];
+    return resp.json();
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchUsername(): Promise<string> {

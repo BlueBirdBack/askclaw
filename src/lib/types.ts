@@ -1,6 +1,12 @@
 export type Lang = 'zh' | 'en';
 
-export type Model = 'openclaw:main' | 'openclaw:opus';
+export type Model = string;
+
+export interface ModelInfo {
+  id: string;
+  model: string;
+  name: string;
+}
 
 export interface Attachment {
   id: string;

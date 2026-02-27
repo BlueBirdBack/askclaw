@@ -107,3 +107,11 @@ class SearchResult(BaseModel):
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
+
+
+# --- Models ---
+
+class ModelOut(BaseModel):
+    id: str
+    model: str
+    name: str

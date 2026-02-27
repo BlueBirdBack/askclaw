@@ -1,4 +1,4 @@
-import type { Lang, Model, ChatMessage, DisplayMessage, Attachment, PendingFile } from './types';
+import type { Lang, Model, ModelInfo, ChatMessage, DisplayMessage, Attachment, PendingFile } from './types';
 import type { ChatSummary, ChatDetail } from './api';
 
 class ChatState {
@@ -15,6 +15,7 @@ class ChatState {
   sidebarOpen: boolean = $state(window.innerWidth >= 768);
   chatList: ChatSummary[] = $state([]);
   scrollToMessageIndex: number | null = $state(null);
+  availableModels: ModelInfo[] = $state([]);
 
   get hasMessages(): boolean {
     return this.messages.length > 0;

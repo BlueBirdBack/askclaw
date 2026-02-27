@@ -29,6 +29,8 @@ class Settings(BaseSettings):
         "application/x-7z-compressed", "application/x-rar-compressed",
     }
 
+    openclaw_config: str = "/root/.openclaw/openclaw.json"
+
     model_config = {"env_prefix": "ASKCLAW_"}
 
 
