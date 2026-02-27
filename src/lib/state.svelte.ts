@@ -1,4 +1,4 @@
-import type { Lang, Model, ChatMessage, DisplayMessage } from './types';
+import type { Lang, Model, ChatMessage, DisplayMessage, Attachment, PendingFile } from './types';
 
 class ChatState {
   lang: Lang = $state((localStorage.getItem('askclaw_lang') as Lang) || 'zh');
@@ -8,6 +8,7 @@ class ChatState {
   streaming: boolean = $state(false);
   username: string = $state('web');
   currentChatId: string | null = $state(null);
+  pendingFiles: PendingFile[] = $state([]);
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -28,10 +29,11 @@ class ChatState {
     this.messages = [];
     this.history = [];
     this.currentChatId = null;
+    this.clearPendingFiles();
   }
 
-  addUserMessage(content: string) {
-    this.messages.push({ role: 'user', content });
+  addUserMessage(content: string, attachments?: Attachment[]) {
+    this.messages.push({ role: 'user', content, attachments });
     this.history.push({ role: 'user', content });
   }
 
@@ -64,6 +66,13 @@ class ChatState {
     if (this.history.length && this.history[this.history.length - 1].role === 'user') {
       this.history.pop();
     }
+  }
+
+  clearPendingFiles() {
+    for (const pf of this.pendingFiles) {
+      URL.revokeObjectURL(pf.previewUrl);
+    }
+    this.pendingFiles = [];
   }
 }
 

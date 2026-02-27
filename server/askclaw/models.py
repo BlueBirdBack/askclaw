@@ -15,9 +15,18 @@ class ChatUpdate(BaseModel):
     tag_ids: list[int] | None = None
 
 
+class AttachmentOut(BaseModel):
+    id: str
+    filename: str
+    content_type: str
+    size: int
+    url: str
+
+
 class MessageIn(BaseModel):
     role: str
     content: str
+    attachment_ids: list[str] = []
 
 
 class MessagesAppend(BaseModel):
@@ -29,6 +38,7 @@ class MessageOut(BaseModel):
     role: str
     content: str
     created_at: str
+    attachments: list[AttachmentOut] = []
 
 
 class ChatSummary(BaseModel):

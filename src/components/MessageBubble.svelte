@@ -22,7 +22,20 @@
 
 {#if message.role === 'user'}
   <div class="msg-wrap msg-wrap-user">
-    <div class="msg msg-user">{message.content}</div>
+    <div class="msg msg-user">
+      {#if message.attachments && message.attachments.length > 0}
+        <div class="msg-images">
+          {#each message.attachments as att}
+            <a href={att.url} target="_blank" rel="noopener noreferrer">
+              <img src={att.url} alt={att.filename} class="msg-image" />
+            </a>
+          {/each}
+        </div>
+      {/if}
+      {#if message.content}
+        <span class="msg-text">{message.content}</span>
+      {/if}
+    </div>
     {#if showCopyButton}
       <button class="copy-btn" onclick={copyMessage} title={t(chatState.lang, 'copied')}>
         {#if copied}
@@ -82,6 +95,25 @@
     padding: 10px 14px;
     border-radius: 16px 16px 4px 16px;
     white-space: pre-wrap;
+  }
+  .msg-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .msg-images:last-child {
+    margin-bottom: 0;
+  }
+  .msg-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    object-fit: cover;
+    cursor: pointer;
+  }
+  .msg-text {
+    display: block;
   }
   .msg-assistant {
     background: var(--assistant-bg);

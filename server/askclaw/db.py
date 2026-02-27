@@ -18,6 +18,7 @@ def get_connection() -> sqlite3.Connection:
 def init_db() -> None:
     """Create tables if they don't exist."""
     Path(settings.db_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
     conn = get_connection()
     try:
         conn.executescript(_SCHEMA_PATH.read_text())

@@ -2,14 +2,33 @@ export type Lang = 'zh' | 'en';
 
 export type Model = 'openclaw:main' | 'openclaw:opus';
 
+export interface Attachment {
+  id: string;
+  filename: string;
+  content_type: string;
+  size: number;
+  url: string;
+}
+
+export interface PendingFile {
+  id: string;
+  file: File;
+  previewUrl: string;
+}
+
+export type ContentBlock =
+  | { type: 'input_text'; text: string }
+  | { type: 'input_image'; source: { type: 'base64'; media_type: string; data: string } };
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
-  content: string;
+  content: string | ContentBlock[];
 }
 
 export interface DisplayMessage {
   role: 'user' | 'assistant' | 'error';
   content: string;
+  attachments?: Attachment[];
 }
 
 export interface I18nStrings {
@@ -39,4 +58,10 @@ export interface I18nStrings {
   passwordMismatch: string;
   passwordWrong: string;
   passwordError: string;
+  attachImage: string;
+  removeImage: string;
+  uploadFailed: string;
+  imageTooLarge: string;
+  tooManyImages: string;
+  unsupportedType: string;
 }

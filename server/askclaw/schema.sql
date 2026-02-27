@@ -46,6 +46,18 @@ CREATE TABLE IF NOT EXISTS chat_tags (
     PRIMARY KEY (chat_id, tag_id)
 );
 
+CREATE TABLE IF NOT EXISTS attachments (
+    id TEXT PRIMARY KEY,
+    message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    storage_path TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(message_id);
+
 -- FTS5 external content table linked to messages
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
     content,

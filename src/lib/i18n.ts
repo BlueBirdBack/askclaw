@@ -40,6 +40,12 @@ const strings: Record<Lang, I18nStrings> = {
     passwordMismatch: '两次输入的密码不一致',
     passwordWrong: '当前密码错误',
     passwordError: '修改失败，请重试',
+    attachImage: '添加图片',
+    removeImage: '移除',
+    uploadFailed: '图片上传失败',
+    imageTooLarge: '图片不能超过 5MB',
+    tooManyImages: '最多 5 张图片',
+    unsupportedType: '不支持的图片格式',
   },
   en: {
     title: 'Ask Claw',
@@ -80,6 +86,12 @@ By continuing to use this service, you acknowledge that you have read, understoo
     passwordMismatch: 'Passwords do not match',
     passwordWrong: 'Current password is incorrect',
     passwordError: 'Failed to change password',
+    attachImage: 'Attach image',
+    removeImage: 'Remove',
+    uploadFailed: 'Image upload failed',
+    imageTooLarge: 'Image must be under 5MB',
+    tooManyImages: 'Maximum 5 images',
+    unsupportedType: 'Unsupported image format',
   },
 };
 

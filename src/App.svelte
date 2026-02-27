@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { chatState } from './lib/state.svelte';
   import { t } from './lib/i18n';
-  import { fetchUsername, streamChat, createChat, saveMessages } from './lib/api';
+  import { fetchUsername, streamChat, createChat, saveMessages, uploadFiles, readFileAsBase64 } from './lib/api';
+  import type { ChatMessage, PendingFile, Attachment, ContentBlock } from './lib/types';
   import Header from './components/Header.svelte';
   import WarningBanner from './components/WarningBanner.svelte';
   import TosModal from './components/TosModal.svelte';
@@ -20,8 +21,26 @@
     chatInput.focus();
   });
 
-  async function handleSend(text: string) {
+  async function handleSend(text: string, files: PendingFile[]) {
     if (chatState.streaming) return;
+
+    // Extract raw File objects from proxy wrappers immediately
+    const rawFiles: File[] = files.map(pf => pf.file);
+
+    // Read base64 data from raw files BEFORE any state changes (avoids $state proxy issues)
+    let imageData: { data: string; media_type: string }[] = [];
+    if (rawFiles.length > 0) {
+      try {
+        imageData = await Promise.all(rawFiles.map(f => readFileAsBase64(f)));
+      } catch {
+        // base64 read failed, will send text-only
+      }
+    }
+
+    // Revoke preview URLs early
+    for (const pf of files) {
+      URL.revokeObjectURL(pf.previewUrl);
+    }
 
     // On first message, create a new chat in the backend
     const isFirstMessage = !chatState.currentChatId;
@@ -31,14 +50,38 @@
       createChat(chatId, chatState.model).catch(() => {});
     }
 
-    chatState.addUserMessage(text);
+    // Upload files to backend and get server attachments
+    let attachments: Attachment[] = [];
+    if (rawFiles.length > 0) {
+      try {
+        attachments = await uploadFiles(rawFiles);
+      } catch {
+        chatState.addError(t(chatState.lang, 'uploadFailed'));
+        return;
+      }
+    }
+
+    chatState.addUserMessage(text, attachments.length > 0 ? attachments : undefined);
     chatState.addAssistantPlaceholder();
     chatState.streaming = true;
 
     const userText = text;
 
+    // Build LLM messages: copy history but replace the last user message with multimodal content
+    const llmMessages: ChatMessage[] = chatState.history.map(m => ({ role: m.role, content: m.content }));
+    if (imageData.length > 0) {
+      const blocks: ContentBlock[] = [
+        { type: 'input_text', text: text || 'What is in the image(s)?' },
+        ...imageData.map(img => ({
+          type: 'input_image' as const,
+          source: { type: 'base64' as const, media_type: img.media_type, data: img.data },
+        })),
+      ];
+      llmMessages[llmMessages.length - 1] = { role: 'user', content: blocks };
+    }
+
     await streamChat(
-      [...chatState.history],
+      llmMessages,
       chatState.model,
       chatState.username,
       {
@@ -56,7 +99,7 @@
           // Save user + assistant messages to backend
           if (chatState.currentChatId && full) {
             saveMessages(chatState.currentChatId, [
-              { role: 'user', content: userText },
+              { role: 'user', content: userText, attachment_ids: attachments.map(a => a.id) },
               { role: 'assistant', content: full },
             ]).catch(() => {});
           }

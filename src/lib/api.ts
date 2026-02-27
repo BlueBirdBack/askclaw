@@ -1,4 +1,4 @@
-import type { ChatMessage, Model } from './types';
+import type { Attachment, ChatMessage, Model } from './types';
 
 // --- Password ---
 
@@ -17,6 +17,40 @@ export async function changePassword(
   return resp.json();
 }
 
+// --- File uploads ---
+
+export async function uploadFiles(files: File[]): Promise<Attachment[]> {
+  const formData = new FormData();
+  for (const f of files) {
+    formData.append('files', f);
+  }
+  const resp = await fetch('/api/files', {
+    method: 'POST',
+    body: formData,
+  });
+  if (!resp.ok) {
+    throw new Error(`Upload failed: ${resp.status}`);
+  }
+  return resp.json();
+}
+
+export function readFileAsBase64(file: File): Promise<{ data: string; media_type: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // "data:image/jpeg;base64,/9j/4AAQ..." → extract media_type and raw base64
+      const comma = dataUrl.indexOf(',');
+      const meta = dataUrl.slice(5, comma); // "image/jpeg;base64"
+      const media_type = meta.split(';')[0];
+      const data = dataUrl.slice(comma + 1);
+      resolve({ data, media_type });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // --- Chat persistence API ---
 
 export async function createChat(id: string, model: Model): Promise<void> {
@@ -29,7 +63,7 @@ export async function createChat(id: string, model: Model): Promise<void> {
 
 export async function saveMessages(
   chatId: string,
-  messages: { role: string; content: string }[],
+  messages: { role: string; content: string; attachment_ids?: string[] }[],
 ): Promise<void> {
   await fetch(`/api/chats/${chatId}/messages`, {
     method: 'POST',
@@ -55,7 +89,13 @@ export async function fetchChats(): Promise<ChatSummary[]> {
 }
 
 export interface ChatDetail extends ChatSummary {
-  messages: { id: number; role: string; content: string; created_at: string }[];
+  messages: {
+    id: number;
+    role: string;
+    content: string;
+    created_at: string;
+    attachments?: Attachment[];
+  }[];
 }
 
 export async function fetchChat(id: string): Promise<ChatDetail | null> {
@@ -93,15 +133,25 @@ export async function streamChat(
       dateStyle: 'full',
       timeStyle: 'short',
     });
-    const systemMsg = { role: 'system' as const, content: `The current date and time is ${now} (Asia/Taipei, UTC+8).` };
+    const instructions = `The current date and time is ${now} (Asia/Taipei, UTC+8).`;
 
-    resp = await fetch('/v1/chat/completions', {
+    // Build /v1/responses input array
+    const input = messages.map((m) => {
+      if (typeof m.content === 'string') {
+        return { type: 'message', role: m.role, content: m.content };
+      }
+      // Multimodal content blocks (input_text + input_image)
+      return { type: 'message', role: m.role, content: m.content };
+    });
+
+    resp = await fetch('/v1/responses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
         stream: true,
-        messages: [systemMsg, ...messages],
+        instructions,
+        input,
         user: 'askclaw-' + username,
       }),
     });
@@ -134,8 +184,9 @@ export async function streamChat(
       if (data === '[DONE]') continue;
       try {
         const parsed = JSON.parse(data);
-        const delta = parsed.choices?.[0]?.delta?.content;
-        if (delta) {
+        // /v1/responses streaming: text deltas arrive in parsed.delta
+        const delta = parsed.delta;
+        if (typeof delta === 'string') {
           full += delta;
           callbacks.onChunk(full);
         }

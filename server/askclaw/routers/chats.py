@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from ..auth import get_current_user
 from ..db import get_connection
 from ..models import (
+    AttachmentOut,
     ChatCreate,
     ChatDetail,
     ChatSummary,
@@ -120,6 +121,27 @@ def get_chat(
             "SELECT tag_id FROM chat_tags WHERE chat_id = ?", (chat_id,)
         ).fetchall()
 
+        # Build attachment lookup by message_id
+        msg_ids = [m["id"] for m in msg_rows]
+        att_by_msg: dict[int, list[AttachmentOut]] = {}
+        if msg_ids:
+            placeholders = ",".join("?" * len(msg_ids))
+            att_rows = conn.execute(
+                f"SELECT id, message_id, filename, content_type, size "
+                f"FROM attachments WHERE message_id IN ({placeholders})",
+                msg_ids,
+            ).fetchall()
+            for a in att_rows:
+                att_by_msg.setdefault(a["message_id"], []).append(
+                    AttachmentOut(
+                        id=a["id"],
+                        filename=a["filename"],
+                        content_type=a["content_type"],
+                        size=a["size"],
+                        url=f"/api/files/{a['id']}",
+                    )
+                )
+
         return ChatDetail(
             id=row["id"],
             title=row["title"],
@@ -134,6 +156,7 @@ def get_chat(
                     role=m["role"],
                     content=m["content"],
                     created_at=m["created_at"],
+                    attachments=att_by_msg.get(m["id"], []),
                 )
                 for m in msg_rows
             ],
@@ -260,9 +283,35 @@ def append_messages(
                 "INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)",
                 (chat_id, msg.role, msg.content),
             )
+            msg_id = cursor.lastrowid
+
+            # Link attachments to this message
+            attachments: list[AttachmentOut] = []
+            if msg.attachment_ids:
+                for att_id in msg.attachment_ids:
+                    conn.execute(
+                        "UPDATE attachments SET message_id = ? WHERE id = ? AND username = ? AND message_id IS NULL",
+                        (msg_id, att_id, username),
+                    )
+                att_rows = conn.execute(
+                    f"SELECT id, filename, content_type, size FROM attachments "
+                    f"WHERE message_id = ?",
+                    (msg_id,),
+                ).fetchall()
+                attachments = [
+                    AttachmentOut(
+                        id=a["id"],
+                        filename=a["filename"],
+                        content_type=a["content_type"],
+                        size=a["size"],
+                        url=f"/api/files/{a['id']}",
+                    )
+                    for a in att_rows
+                ]
+
             row = conn.execute(
                 "SELECT id, role, content, created_at FROM messages WHERE id = ?",
-                (cursor.lastrowid,),
+                (msg_id,),
             ).fetchone()
             inserted.append(
                 MessageOut(
@@ -270,6 +319,7 @@ def append_messages(
                     role=row["role"],
                     content=row["content"],
                     created_at=row["created_at"],
+                    attachments=attachments,
                 )
             )
 

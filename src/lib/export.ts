@@ -6,7 +6,16 @@ export function exportChatAsMarkdown(messages: DisplayMessage[]): void {
   for (const msg of messages) {
     if (msg.role === 'error') continue;
     const heading = msg.role === 'user' ? '## User' : '## Assistant';
-    parts.push(`${heading}\n\n${msg.content}`);
+    let body = msg.content;
+
+    if (msg.attachments && msg.attachments.length > 0) {
+      const imageRefs = msg.attachments
+        .map((att) => `![${att.filename}](${att.url})`)
+        .join('\n');
+      body = body ? `${imageRefs}\n\n${body}` : imageRefs;
+    }
+
+    parts.push(`${heading}\n\n${body}`);
   }
 
   const text = parts.join('\n\n');
