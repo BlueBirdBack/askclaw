@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { chatState } from '../lib/state.svelte';
   import { t } from '../lib/i18n';
+  import { sanitizeSnippet } from '../lib/markdown';
   import { fetchChats, fetchChat, deleteChat, searchMessages } from '../lib/api';
   import type { SearchResult } from '../lib/types';
 
@@ -140,7 +141,7 @@
         {#each [...groupedResults().entries()] as [chatId, group]}
           <button class="search-result" onclick={() => openChat(chatId, group.results[0].message_id)}>
             <span class="chat-title">{group.title || t(chatState.lang, 'untitled')}</span>
-            <span class="snippet">{@html group.results[0].snippet}</span>
+            <span class="snippet">{@html sanitizeSnippet(group.results[0].snippet)}</span>
           </button>
         {/each}
       {/if}

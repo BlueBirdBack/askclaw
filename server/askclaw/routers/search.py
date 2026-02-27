@@ -1,4 +1,5 @@
 import re
+from html import escape as html_escape
 
 from fastapi import APIRouter, Depends, Query
 
@@ -10,9 +11,14 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 
 def _highlight(text: str, query: str) -> str:
-    """Case-insensitive highlight of query in text using <mark> tags."""
-    escaped = re.escape(query)
-    return re.sub(f"({escaped})", r"<mark>\1</mark>", text, flags=re.IGNORECASE)
+    """Case-insensitive highlight of query in text using <mark> tags.
+
+    HTML-escapes the text first to prevent XSS, then wraps matches.
+    """
+    safe = html_escape(text, quote=False)
+    escaped_query = html_escape(query, quote=False)
+    pattern = re.escape(escaped_query)
+    return re.sub(f"({pattern})", r"<mark>\1</mark>", safe, flags=re.IGNORECASE)
 
 
 def _snippet_around(text: str, query: str, context: int = 40) -> str:
