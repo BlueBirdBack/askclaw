@@ -128,13 +128,6 @@
     </div>
   {/if}
   <form onsubmit={handleSubmit}>
-    <select
-      bind:value={chatState.model}
-      title="Model"
-    >
-      <option value="openclaw:main">Sonnet</option>
-      <option value="openclaw:opus">Opus</option>
-    </select>
     <button type="button" class="attach-btn" onclick={() => fileInput.click()} title={t(chatState.lang, 'attachImage')}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
     </button>
@@ -210,21 +203,6 @@
     display: flex;
     gap: 8px;
     align-items: flex-end;
-  }
-  select {
-    background: var(--input-bg);
-    color: var(--text2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 13px;
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  select:focus {
-    border-color: var(--accent);
   }
   .attach-btn {
     background: none;

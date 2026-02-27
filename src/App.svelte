@@ -130,12 +130,12 @@
 </script>
 
 <div id="shell">
-  <Header onopenpassword={() => passwordOpen = true} />
+  <Header onopenpassword={() => passwordOpen = true} onopentos={() => tosOpen = true} />
+  <WarningBanner onopentos={() => tosOpen = true} />
   <MessageList />
   <ChatInput bind:this={chatInput} onsend={handleSend} />
 </div>
 
-<WarningBanner onopentos={() => tosOpen = true} />
 <TosModal open={tosOpen} onclose={() => tosOpen = false} />
 <PasswordModal open={passwordOpen} onclose={() => passwordOpen = false} />
 

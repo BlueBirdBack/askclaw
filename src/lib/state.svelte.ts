@@ -9,6 +9,7 @@ class ChatState {
   username: string = $state('web');
   currentChatId: string | null = $state(null);
   pendingFiles: PendingFile[] = $state([]);
+  warningDismissed: boolean = $state(localStorage.getItem('askclaw_warning_dismissed') === '1');
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -23,6 +24,16 @@ class ChatState {
 
   toggleLang() {
     this.setLang(this.lang === 'zh' ? 'en' : 'zh');
+  }
+
+  dismissWarning() {
+    this.warningDismissed = true;
+    localStorage.setItem('askclaw_warning_dismissed', '1');
+  }
+
+  showWarning() {
+    this.warningDismissed = false;
+    localStorage.removeItem('askclaw_warning_dismissed');
   }
 
   newChat() {

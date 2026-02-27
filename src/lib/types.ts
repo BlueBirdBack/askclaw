@@ -65,4 +65,5 @@ export interface I18nStrings {
   imageTooLarge: string;
   tooManyImages: string;
   unsupportedType: string;
+  settings: string;
 }

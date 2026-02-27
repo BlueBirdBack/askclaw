@@ -46,6 +46,7 @@ const strings: Record<Lang, I18nStrings> = {
     imageTooLarge: '图片不能超过 5MB',
     tooManyImages: '最多 5 张图片',
     unsupportedType: '不支持的图片格式',
+    settings: '设置',
   },
   en: {
     title: 'Ask Claw',
@@ -92,6 +93,7 @@ By continuing to use this service, you acknowledge that you have read, understoo
     imageTooLarge: 'Image must be under 5MB',
     tooManyImages: 'Maximum 5 images',
     unsupportedType: 'Unsupported image format',
+    settings: 'Settings',
   },
 };
 
