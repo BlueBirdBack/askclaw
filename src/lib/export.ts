@@ -105,3 +105,132 @@ export async function exportChatAsPdf(messages: DisplayMessage[]): Promise<void>
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
   }).from(container).save();
 }
+
+export async function exportChatAsDocx(messages: DisplayMessage[]): Promise<void> {
+  const docx = await import('docx');
+  const { markdownToDocx } = await import('./markdown-to-docx');
+
+  const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  const children: (InstanceType<typeof docx.Paragraph> | InstanceType<typeof docx.Table>)[] = [];
+
+  // Title
+  children.push(new docx.Paragraph({
+    children: [new docx.TextRun({ text: 'Ask Claw', bold: true, size: 44 })],
+    spacing: { after: 40 },
+  }));
+
+  // Date
+  children.push(new docx.Paragraph({
+    children: [new docx.TextRun({ text: new Date().toLocaleDateString(), size: 20, color: '666666' })],
+    spacing: { after: 300 },
+  }));
+
+  for (const msg of messages) {
+    if (msg.role === 'error') continue;
+
+    // Role heading
+    children.push(new docx.Paragraph({
+      children: [new docx.TextRun({
+        text: msg.role === 'user' ? 'USER' : 'ASSISTANT',
+        size: 20,
+        color: '888888',
+        bold: true,
+        allCaps: true,
+      })],
+      spacing: { before: 240, after: 80 },
+    }));
+
+    // Attachments
+    if (msg.attachments && msg.attachments.length > 0) {
+      for (const att of msg.attachments) {
+        if (IMAGE_TYPES.has(att.content_type)) {
+          try {
+            const resp = await fetch(att.url);
+            if (resp.ok) {
+              const buf = await resp.arrayBuffer();
+              // Detect dimensions
+              const dims = await new Promise<{ width: number; height: number }>((resolve) => {
+                const blob = new Blob([buf], { type: att.content_type });
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => { URL.revokeObjectURL(url); resolve({ width: img.naturalWidth, height: img.naturalHeight }); };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve({ width: 400, height: 300 }); };
+                img.src = url;
+              });
+              const maxWidth = 500;
+              let w = dims.width, h = dims.height;
+              if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+              children.push(new docx.Paragraph({
+                children: [new docx.ImageRun({ data: buf, transformation: { width: w, height: h }, type: 'png' })],
+                spacing: { after: 80 },
+              }));
+            } else {
+              children.push(new docx.Paragraph({
+                children: [new docx.TextRun({ text: `[Image: ${att.filename}]`, italics: true, color: '888888' })],
+                spacing: { after: 80 },
+              }));
+            }
+          } catch {
+            children.push(new docx.Paragraph({
+              children: [new docx.TextRun({ text: `[Image: ${att.filename}]`, italics: true, color: '888888' })],
+              spacing: { after: 80 },
+            }));
+          }
+        } else {
+          children.push(new docx.Paragraph({
+            children: [new docx.TextRun({ text: `[Attachment: ${att.filename}]`, italics: true, color: '666666' })],
+            spacing: { after: 80 },
+          }));
+        }
+      }
+    }
+
+    // Content
+    if (msg.role === 'assistant') {
+      const paras = await markdownToDocx(msg.content, docx);
+      children.push(...paras);
+    } else {
+      const lines = msg.content.split('\n');
+      for (const line of lines) {
+        children.push(new docx.Paragraph({
+          children: [new docx.TextRun({ text: line })],
+          spacing: { after: 40 },
+        }));
+      }
+    }
+
+    // Separator
+    children.push(new docx.Paragraph({
+      border: { bottom: { style: docx.BorderStyle.SINGLE, size: 6, color: 'E0E0E0' } },
+      spacing: { before: 160, after: 160 },
+    }));
+  }
+
+  const doc = new docx.Document({
+    numbering: {
+      config: [{
+        reference: 'ordered-list',
+        levels: [{
+          level: 0,
+          format: docx.LevelFormat.DECIMAL,
+          text: '%1.',
+          alignment: docx.AlignmentType.START,
+        }],
+      }],
+    },
+    sections: [{ children: children as InstanceType<typeof docx.Paragraph>[] }],
+  });
+
+  const blob = await docx.Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `askclaw-chat-${dateStr}.docx`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}

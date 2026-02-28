@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DisplayMessage } from '../lib/types';
   import { chatState } from '../lib/state.svelte';
-  import { exportChatAsMarkdown, exportChatAsPdf } from '../lib/export';
+  import { exportChatAsMarkdown, exportChatAsPdf, exportChatAsDocx } from '../lib/export';
 
   let { messages }: { messages: DisplayMessage[] } = $props();
 
@@ -12,6 +12,18 @@
     exporting = true;
     try {
       await exportChatAsPdf(messages);
+    } finally {
+      exporting = false;
+      open = false;
+    }
+  }
+
+  async function handleDocx() {
+    exporting = true;
+    try {
+      await exportChatAsDocx(messages);
+    } catch (e) {
+      console.error('Docx export failed:', e);
     } finally {
       exporting = false;
       open = false;
@@ -38,6 +50,10 @@
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
       <div class="row clickable" onclick={handlePdf}>
         <span>{exporting ? (chatState.lang === 'zh' ? '导出中...' : 'Exporting...') : 'PDF (.pdf)'}</span>
+      </div>
+      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+      <div class="row clickable" onclick={handleDocx}>
+        <span>{exporting ? (chatState.lang === 'zh' ? '导出中...' : 'Exporting...') : 'Word (.docx)'}</span>
       </div>
     </div>
   {/if}
