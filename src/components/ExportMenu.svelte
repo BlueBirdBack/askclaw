@@ -9,10 +9,14 @@
   let exportingPdf = $state(false);
   let exportingDocx = $state(false);
 
+  const chatTitle = $derived(
+    chatState.chatList.find(c => c.id === chatState.currentChatId)?.title ?? ''
+  );
+
   async function handlePdf() {
     exportingPdf = true;
     try {
-      await exportChatAsPdf(messages);
+      await exportChatAsPdf(messages, chatTitle);
     } finally {
       exportingPdf = false;
       open = false;
@@ -22,7 +26,7 @@
   async function handleDocx() {
     exportingDocx = true;
     try {
-      await exportChatAsDocx(messages);
+      await exportChatAsDocx(messages, chatTitle);
     } catch (e) {
       console.error('Docx export failed:', e);
     } finally {
@@ -45,7 +49,7 @@
   {#if open}
     <div class="dropdown">
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-      <div class="row clickable" onclick={() => { exportChatAsMarkdown(messages); open = false; }}>
+      <div class="row clickable" onclick={() => { exportChatAsMarkdown(messages, chatTitle); open = false; }}>
         <span>Markdown (.md)</span>
       </div>
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->

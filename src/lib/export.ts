@@ -1,7 +1,18 @@
 import type { DisplayMessage } from './types';
 import { renderMarkdown } from './markdown';
 
-export function exportChatAsMarkdown(messages: DisplayMessage[]): void {
+function makeFilename(title: string, ext: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  const slug = title
+    .trim()
+    .slice(0, 20)
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+$/, '');
+  return slug ? `${slug}-${date}.${ext}` : `askclaw-chat-${date}.${ext}`;
+}
+
+export function exportChatAsMarkdown(messages: DisplayMessage[], title = ''): void {
   const parts: string[] = [];
 
   for (const msg of messages) {
@@ -26,24 +37,23 @@ export function exportChatAsMarkdown(messages: DisplayMessage[]): void {
   const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 
-  const date = new Date().toISOString().slice(0, 10);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `askclaw-chat-${date}.md`;
+  a.download = makeFilename(title, 'md');
   a.click();
   URL.revokeObjectURL(url);
 }
 
-export async function exportChatAsPdf(messages: DisplayMessage[]): Promise<void> {
+export async function exportChatAsPdf(messages: DisplayMessage[], title = ''): Promise<void> {
   const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
   const container = document.createElement('div');
   container.style.cssText = 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; padding: 20px; max-width: 700px;';
 
-  const title = document.createElement('h1');
-  title.textContent = 'Ask Claw';
-  title.style.cssText = 'font-size: 22px; margin: 0 0 4px;';
-  container.appendChild(title);
+  const titleEl = document.createElement('h1');
+  titleEl.textContent = 'Ask Claw';
+  titleEl.style.cssText = 'font-size: 22px; margin: 0 0 4px;';
+  container.appendChild(titleEl);
 
   const date = document.createElement('p');
   date.textContent = new Date().toLocaleDateString();
@@ -96,22 +106,20 @@ export async function exportChatAsPdf(messages: DisplayMessage[]): Promise<void>
   container.appendChild(style);
 
   const html2pdf = (await import('html2pdf.js')).default;
-  const dateStr = new Date().toISOString().slice(0, 10);
   await html2pdf().set({
     margin: [10, 10, 10, 10],
-    filename: `askclaw-chat-${dateStr}.pdf`,
+    filename: makeFilename(title, 'pdf'),
     image: { type: 'jpeg', quality: 0.95 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
   }).from(container).save();
 }
 
-export async function exportChatAsDocx(messages: DisplayMessage[]): Promise<void> {
+export async function exportChatAsDocx(messages: DisplayMessage[], title = ''): Promise<void> {
   const docx = await import('docx');
   const { markdownToDocx } = await import('./markdown-to-docx');
 
   const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
-  const dateStr = new Date().toISOString().slice(0, 10);
 
   const children: (InstanceType<typeof docx.Paragraph> | InstanceType<typeof docx.Table>)[] = [];
 
@@ -227,7 +235,7 @@ export async function exportChatAsDocx(messages: DisplayMessage[]): Promise<void
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `askclaw-chat-${dateStr}.docx`;
+  a.download = makeFilename(title, 'docx');
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
