@@ -53,10 +53,22 @@
   }
 
   async function openChat(chatId: string, messageId?: number) {
-    const detail = await fetchChat(chatId);
-    if (detail) {
-      chatState.loadChat(detail, messageId);
+    // Instant feedback: show loading state immediately
+    chatState.loading = true;
+
+    // Check in-memory cache first
+    const cached = chatState.chatCache.get(chatId);
+    if (cached) {
+      chatState.loadChat(cached, messageId);
+    } else {
+      const detail = await fetchChat(chatId);
+      if (detail) {
+        chatState.loadChat(detail, messageId);
+      } else {
+        chatState.loading = false;
+      }
     }
+
     // On mobile, close sidebar after selecting
     if (window.innerWidth < 768) {
       chatState.sidebarOpen = false;
@@ -69,6 +81,7 @@
     const ok = await deleteChat(chatId);
     if (ok) {
       chatState.chatList = chatState.chatList.filter((c) => c.id !== chatId);
+      chatState.chatCache.delete(chatId);
       if (chatState.currentChatId === chatId) {
         chatState.newChat();
       }

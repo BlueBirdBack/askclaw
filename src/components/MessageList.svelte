@@ -2,23 +2,18 @@
   import { untrack } from 'svelte';
   import { chatState } from '../lib/state.svelte';
   import MessageBubble from './MessageBubble.svelte';
+  import TypingIndicator from './TypingIndicator.svelte';
   import Welcome from './Welcome.svelte';
 
   let container: HTMLDivElement;
 
+  // Effect 1: scroll on new messages or search-result jump
   $effect(() => {
-    // Track messages length to trigger scroll
     chatState.messages.length;
-    // Also track last message content for streaming updates
-    if (chatState.messages.length > 0) {
-      chatState.messages[chatState.messages.length - 1].content;
-    }
 
-    // Read without tracking to avoid re-trigger when we clear it
     const targetIdx = untrack(() => chatState.scrollToMessageIndex);
 
     if (targetIdx !== null) {
-      // Wait for DOM to render, then scroll to the target message
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           chatState.scrollToMessageIndex = null;
@@ -36,6 +31,19 @@
     }
   });
 
+  // Effect 2: interval-based scroll during streaming (no per-chunk dependency)
+  $effect(() => {
+    if (!chatState.streaming) return;
+
+    const interval = setInterval(() => scrollToBottom(), 150);
+
+    return () => {
+      clearInterval(interval);
+      // Final scroll after streaming ends
+      scrollToBottom();
+    };
+  });
+
   function scrollToBottom() {
     if (container) {
       requestAnimationFrame(() => {
@@ -46,7 +54,9 @@
 </script>
 
 <div class="messages" bind:this={container}>
-  {#if !chatState.hasMessages}
+  {#if chatState.loading && !chatState.hasMessages}
+    <div class="loading-center"><TypingIndicator /></div>
+  {:else if !chatState.hasMessages}
     <Welcome />
   {:else}
     {#each chatState.messages as message, i}
@@ -65,5 +75,11 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+  .loading-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>

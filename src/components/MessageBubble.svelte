@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { DisplayMessage } from '../lib/types';
   import { renderMarkdown } from '../lib/markdown';
   import { chatState } from '../lib/state.svelte';
@@ -10,6 +11,29 @@
   let { message }: { message: DisplayMessage } = $props();
 
   let copied = $state(false);
+  let renderedHtml = $state('');
+
+  // Throttled markdown rendering: immediate for non-streaming, ~100ms throttle during stream
+  $effect(() => {
+    const content = message.content;
+    const isStreaming = chatState.streaming;
+    const isThisStreaming = isStreaming && message.role === 'assistant'
+      && untrack(() => chatState.messages.length > 0
+        && chatState.messages[chatState.messages.length - 1] === message);
+
+    if (!isThisStreaming) {
+      // Not streaming — render immediately (final or historical message)
+      renderedHtml = renderMarkdown(content);
+      return;
+    }
+
+    // During streaming — throttle renders
+    const timer = setTimeout(() => {
+      renderedHtml = renderMarkdown(content);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  });
 
   function formatSize(bytes: number): string {
     if (bytes < 1024) return bytes + 'B';
@@ -81,7 +105,7 @@
 {:else}
   <div class="msg-wrap msg-wrap-assistant">
     <div class="msg msg-assistant">
-      {@html renderMarkdown(message.content)}
+      {@html renderedHtml}
     </div>
     {#if showCopyButton}
       <button class="copy-btn" onclick={copyMessage} title={t(chatState.lang, 'copied')}>

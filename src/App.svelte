@@ -155,10 +155,46 @@
 
           // Save user + assistant messages to backend
           if (chatState.currentChatId && full) {
-            saveMessages(chatState.currentChatId, [
+            const chatId = chatState.currentChatId;
+            const now = new Date().toISOString();
+
+            // Optimistic sidebar update — no round-trip needed
+            const idx = chatState.chatList.findIndex(c => c.id === chatId);
+            if (idx >= 0) {
+              const entry = chatState.chatList[idx];
+              entry.updated_at = now;
+              if (!entry.title && userText) {
+                entry.title = userText.length > 50 ? userText.slice(0, 50).trim() + '...' : userText;
+              }
+              // Move to top
+              if (idx > 0) {
+                chatState.chatList.splice(idx, 1);
+                chatState.chatList.unshift(entry);
+              }
+            } else {
+              // New chat not yet in list — prepend
+              chatState.chatList.unshift({
+                id: chatId,
+                title: userText.length > 50 ? userText.slice(0, 50).trim() + '...' : userText,
+                model: chatState.model,
+                category_id: null,
+                tag_ids: [],
+                created_at: now,
+                updated_at: now,
+              });
+            }
+
+            // Keep chat cache in sync
+            chatState.updateChatCache(
+              userText,
+              full,
+              attachments.length > 0 ? attachments : undefined,
+            );
+
+            saveMessages(chatId, [
               { role: 'user', content: userText, attachment_ids: attachments.map(a => a.id) },
               { role: 'assistant', content: full },
-            ]).then(() => sidebar?.refresh()).catch(() => {
+            ]).catch(() => {
               chatState.addError(t(chatState.lang, 'errGeneric').replace('{code}', 'save'));
             });
           }

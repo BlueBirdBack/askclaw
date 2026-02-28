@@ -46,23 +46,30 @@ def list_chats(
             params,
         ).fetchall()
 
-        result = []
-        for row in rows:
+        # Batch-fetch tags for all chats (avoids N+1 queries)
+        chat_ids = [row["id"] for row in rows]
+        tags_by_chat: dict[str, list[int]] = {}
+        if chat_ids:
+            placeholders = ",".join("?" * len(chat_ids))
             tag_rows = conn.execute(
-                "SELECT tag_id FROM chat_tags WHERE chat_id = ?", (row["id"],)
+                f"SELECT chat_id, tag_id FROM chat_tags WHERE chat_id IN ({placeholders})",
+                chat_ids,
             ).fetchall()
-            result.append(
-                ChatSummary(
-                    id=row["id"],
-                    title=row["title"],
-                    model=row["model"],
-                    category_id=row["category_id"],
-                    tag_ids=[r["tag_id"] for r in tag_rows],
-                    created_at=row["created_at"],
-                    updated_at=row["updated_at"],
-                )
+            for tr in tag_rows:
+                tags_by_chat.setdefault(tr["chat_id"], []).append(tr["tag_id"])
+
+        return [
+            ChatSummary(
+                id=row["id"],
+                title=row["title"],
+                model=row["model"],
+                category_id=row["category_id"],
+                tag_ids=tags_by_chat.get(row["id"], []),
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
             )
-        return result
+            for row in rows
+        ]
     finally:
         conn.close()
 

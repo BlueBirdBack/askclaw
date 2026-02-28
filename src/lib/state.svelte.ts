@@ -8,6 +8,7 @@ class ChatState {
   history: ChatMessage[] = $state([]);
   uploading: boolean = $state(false);
   streaming: boolean = $state(false);
+  loading: boolean = $state(false);
   username: string = $state('web');
   currentChatId: string | null = $state(null);
   pendingFiles: PendingFile[] = $state([]);
@@ -17,6 +18,7 @@ class ChatState {
   scrollToMessageIndex: number | null = $state(null);
   availableModels: ModelInfo[] = $state([]);
   abortController: AbortController | null = $state(null);
+  chatCache = new Map<string, ChatDetail>();
 
   get hasMessages(): boolean {
     return this.messages.length > 0;
@@ -97,6 +99,8 @@ class ChatState {
     this.abortController?.abort();
     this.abortController = null;
     this.streaming = false;
+    this.loading = false;
+    this.chatCache.set(detail.id, detail);
     this.messages = detail.messages.map((m) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
@@ -115,6 +119,22 @@ class ChatState {
       this.scrollToMessageIndex = idx >= 0 ? idx : null;
     } else {
       this.scrollToMessageIndex = null;
+    }
+  }
+
+  /** Update cached ChatDetail for current chat after new messages are saved */
+  updateChatCache(userContent: string, assistantContent: string, attachments?: Attachment[]) {
+    if (!this.currentChatId) return;
+    const cached = this.chatCache.get(this.currentChatId);
+    if (!cached) return;
+    const now = new Date().toISOString();
+    cached.messages.push(
+      { id: 0, role: 'user', content: userContent, created_at: now, attachments },
+      { id: 0, role: 'assistant', content: assistantContent, created_at: now },
+    );
+    cached.updated_at = now;
+    if (!cached.title && userContent) {
+      cached.title = userContent.length > 50 ? userContent.slice(0, 50).trim() + '...' : userContent;
     }
   }
 
