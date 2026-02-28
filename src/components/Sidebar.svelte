@@ -53,14 +53,14 @@
   }
 
   async function openChat(chatId: string, messageId?: number) {
-    // Instant feedback: show loading state immediately
-    chatState.loading = true;
-
     // Check in-memory cache first
     const cached = chatState.chatCache.get(chatId);
     if (cached) {
       chatState.loadChat(cached, messageId);
     } else {
+      // Clear current view and show loading indicator immediately
+      chatState.messages = [];
+      chatState.loading = true;
       const detail = await fetchChat(chatId);
       if (detail) {
         chatState.loadChat(detail, messageId);
