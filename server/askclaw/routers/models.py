@@ -50,5 +50,5 @@ async def list_models(username: str = Depends(get_current_user)) -> list[ModelOu
             name=_display_name(agent.get("model", agent["id"])),
         )
         for agent in agents
-        if "id" in agent
+        if "id" in agent and agent.get("model")
     ]
