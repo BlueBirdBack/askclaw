@@ -77,15 +77,24 @@ npm run build      # production → dist/
 ### Environment
 
 ```bash
-# Server config (server/.env)
-OPENCLAW_BASE_URL=https://your-openclaw-or-openai-endpoint
-OPENCLAW_API_KEY=your-api-key
-
-# For Azure OpenAI
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
-AZURE_OPENAI_KEY=your-azure-key
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
+# Copy the example and edit
+cp server/.env.example server/.env
 ```
+
+**Default (OpenAI / OpenClaw):**
+```bash
+ASKCLAW_OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
+```
+
+**Azure OpenAI** — point ClawDesk at your own Azure deployment:
+```bash
+ASKCLAW_AZURE_OPENAI_ENDPOINT=https://YOUR_RESOURCE.openai.azure.com
+ASKCLAW_AZURE_OPENAI_KEY=your-azure-key
+ASKCLAW_AZURE_OPENAI_DEPLOYMENT=gpt-4o
+ASKCLAW_AZURE_OPENAI_API_VERSION=2025-01-01-preview
+```
+
+That's it. One block of env vars to switch from a shared OpenAI endpoint to your own Azure OpenAI deployment. Your data never leaves your Azure subscription.
 
 ### Production (nginx)
 

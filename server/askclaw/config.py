@@ -31,6 +31,13 @@ class Settings(BaseSettings):
 
     openclaw_config: str = "/root/.openclaw/openclaw.json"
 
+    # Azure OpenAI — when set, overrides the default OpenAI provider
+    # Set these to route through your Azure OpenAI deployment instead
+    azure_openai_endpoint: str = ""        # e.g. https://YOUR_RESOURCE.openai.azure.com
+    azure_openai_key: str = ""             # Azure OpenAI API key
+    azure_openai_deployment: str = ""      # Deployment name, e.g. gpt-4o
+    azure_openai_api_version: str = "2025-01-01-preview"
+
     model_config = {"env_prefix": "ASKCLAW_"}
 
 
