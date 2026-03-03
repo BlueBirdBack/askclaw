@@ -1,47 +1,130 @@
-# Svelte + TS + Vite
+# AskClaw
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+> A production-ready, self-hosted AI chat platform.  
+> Live at [askclaw.top](https://askclaw.top) · 20+ active users · MIT License
 
-## Recommended IDE Setup
+![Desktop](screenshot-desktop.png)
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+## What it is
 
-## Need an official Svelte framework?
+AskClaw is a clean, private AI chat interface you can host on your own server. No data leaves your infrastructure. No vendor lock-in. Works with OpenAI, Azure OpenAI, or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+Built for teams who want AI chat without the SaaS price tag or the privacy tradeoffs.
 
-## Technical considerations
+## Features
 
-**Why use this over SvelteKit?**
+- 💬 **Real-time streaming chat** — responses stream as they're generated
+- 👥 **Multi-user** — per-user isolated sessions, shared infrastructure
+- 📄 **Export** — save conversations as PDF or DOCX
+- 🌐 **Bilingual** — English + Chinese (i18n built-in)
+- 📱 **Responsive** — desktop, tablet, and mobile
+- 🔍 **Search** — full-text search across all conversations (SQLite FTS5)
+- 🔌 **Model-agnostic** — OpenAI API, Azure OpenAI, or any compatible endpoint
+- 🔒 **Auth** — HTTP Basic Auth with per-user session isolation
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+## Screenshots
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+| Desktop | Mobile |
+|---|---|
+| ![Desktop](screenshot-desktop.png) | ![Mobile](screenshot-mobile.png) |
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+## Stack
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+| Layer | Technology |
+|---|---|
+| Frontend | Svelte 5 + TypeScript + Vite |
+| Backend | FastAPI + Python 3.13 |
+| Database | SQLite (WAL mode, FTS5 full-text search) |
+| Auth | HTTP Basic Auth (htpasswd) |
+| Export | PDF (html2pdf) + DOCX (docx.js) |
+| i18n | Custom (en + zh) |
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+## Architecture
 
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
 ```
+Browser
+  └─▶ nginx (TLS termination + Basic Auth)
+        ├─▶ FastAPI backend (:8000)  ← chat history, files, search
+        └─▶ AI provider             ← OpenAI / Azure OpenAI / OpenClaw
+```
+
+Each user gets an isolated session. The backend stores conversations in SQLite with full-text search. The AI provider is configurable — swap it by changing one environment variable.
+
+## Quick Start
+
+### Prerequisites
+- Python 3.13+
+- Node.js 18+
+- An OpenAI-compatible API endpoint
+
+### Backend
+
+```bash
+cd server
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+uvicorn askclaw.main:app --host 127.0.0.1 --port 8000
+```
+
+### Frontend
+
+```bash
+npm install
+npm run dev        # development
+npm run build      # production → dist/
+```
+
+### Environment
+
+```bash
+# Server config (server/.env)
+OPENCLAW_BASE_URL=https://your-openclaw-or-openai-endpoint
+OPENCLAW_API_KEY=your-api-key
+
+# For Azure OpenAI
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+AZURE_OPENAI_KEY=your-azure-key
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+```
+
+### Production (nginx)
+
+See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Basic Auth.
+
+## Project Structure
+
+```
+/
+├── src/                    # Svelte 5 frontend
+│   ├── components/         # Chat UI components
+│   └── lib/               # API client, i18n, export, state
+├── server/
+│   └── askclaw/           # FastAPI backend
+│       ├── routers/       # API routes (chats, files, auth, search)
+│       ├── main.py        # App entry point
+│       ├── models.py      # Pydantic models
+│       └── db.py          # SQLite + FTS5
+└── public/                # Static assets
+```
+
+## Live Demo
+
+[askclaw.top](https://askclaw.top) — production deployment with real users.
+
+## Roadmap
+
+- [ ] Azure OpenAI first-class integration
+- [ ] Docker Compose setup
+- [ ] Multi-model selection per chat
+- [ ] Team/organization support
+- [ ] Usage analytics dashboard
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+## Built with
+
+- [OpenClaw](https://github.com/openclaw/openclaw) — multi-agent AI framework powering the backend
+- [Svelte](https://svelte.dev) — frontend framework
+- [FastAPI](https://fastapi.tiangolo.com) — backend framework
