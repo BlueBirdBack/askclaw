@@ -45,7 +45,7 @@ Built for teams who want AI chat without the SaaS price tag or the privacy trade
 Browser
   └─▶ nginx (TLS termination + Basic Auth)
         ├─▶ FastAPI backend (:8000)  ← chat history, files, search
-        └─▶ AI provider             ← OpenAI / Azure OpenAI / OpenClaw
+        └─▶ AI provider             ← OpenAI / OpenClaw / any compatible endpoint
 ```
 
 Each user gets an isolated session. The backend stores conversations in SQLite with full-text search. The AI provider is configurable — swap it by changing one environment variable.
