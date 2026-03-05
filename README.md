@@ -86,6 +86,10 @@ cp server/.env.example server/.env
 ASKCLAW_OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
 ```
 
+### OpenClaw agent
+
+AskClaw uses a dedicated OpenClaw agent (`openclaw:askclaw`) with a minimal workspace to prevent the main agent's system prompt from leaking into user responses. See [`docs/openclaw-agent.md`](docs/openclaw-agent.md) for full setup details.
+
 ### Production (nginx)
 
 See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Basic Auth.
