@@ -86,7 +86,7 @@ cp server/.env.example server/.env
 ASKCLAW_OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
 ```
 
-**Azure OpenAI** — point ClawDesk at your own Azure deployment:
+**Azure OpenAI** — point AskClaw at your own Azure deployment:
 ```bash
 ASKCLAW_AZURE_OPENAI_ENDPOINT=https://YOUR_RESOURCE.openai.azure.com
 ASKCLAW_AZURE_OPENAI_KEY=your-azure-key
@@ -122,7 +122,7 @@ See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Ba
 
 ## Roadmap
 
-- [ ] Azure OpenAI first-class integration
+- [x] Azure OpenAI first-class integration
 - [ ] Docker Compose setup
 - [ ] Multi-model selection per chat
 - [ ] Team/organization support
