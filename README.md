@@ -3,7 +3,7 @@
 > A production-ready, self-hosted AI chat platform.  
 > Live at [askclaw.top](https://askclaw.top) · 20+ active users · MIT License
 
-![Desktop](screenshot-desktop.png)
+![Desktop](docs/screenshots/screenshot-desktop-chat.png)
 
 ## What it is
 
@@ -24,9 +24,13 @@ Built for teams who want AI chat without the SaaS price tag or the privacy trade
 
 ## Screenshots
 
-| Desktop | Mobile |
+| Empty state | Active chat |
 |---|---|
-| ![Desktop](screenshot-desktop.png) | ![Mobile](screenshot-mobile.png) |
+| ![Desktop empty](docs/screenshots/screenshot-desktop.png) | ![Desktop chat](docs/screenshots/screenshot-desktop-chat.png) |
+
+| Mobile |
+|---|
+| ![Mobile](docs/screenshots/screenshot-mobile.png) |
 
 ## Stack
 
