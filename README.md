@@ -5,6 +5,10 @@
 
 ![Desktop](docs/screenshots/desktop-chat.png)
 
+**English** · [中文](README.zh.md)
+
+---
+
 ## What it is
 
 AskClaw is a clean, private AI chat interface you can host on your own server. No data leaves your infrastructure. No vendor lock-in. Works with OpenAI or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
