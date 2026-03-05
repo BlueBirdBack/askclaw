@@ -7,7 +7,7 @@
 
 ## What it is
 
-AskClaw is a clean, private AI chat interface you can host on your own server. No data leaves your infrastructure. No vendor lock-in. Works with OpenAI, Azure OpenAI, or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
+AskClaw is a clean, private AI chat interface you can host on your own server. No data leaves your infrastructure. No vendor lock-in. Works with OpenAI or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
 
 Built for teams who want AI chat without the SaaS price tag or the privacy tradeoffs.
 
@@ -19,7 +19,7 @@ Built for teams who want AI chat without the SaaS price tag or the privacy trade
 - 🌐 **Bilingual** — English + Chinese (i18n built-in)
 - 📱 **Responsive** — desktop, tablet, and mobile
 - 🔍 **Search** — full-text search across all conversations (SQLite FTS5)
-- 🔌 **Model-agnostic** — OpenAI API, Azure OpenAI, or any compatible endpoint
+- 🔌 **Model-agnostic** — OpenAI API or any OpenAI-compatible endpoint
 - 🔒 **Auth** — HTTP Basic Auth with per-user session isolation
 
 ## Screenshots
@@ -86,16 +86,6 @@ cp server/.env.example server/.env
 ASKCLAW_OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
 ```
 
-**Azure OpenAI** — point AskClaw at your own Azure deployment:
-```bash
-ASKCLAW_AZURE_OPENAI_ENDPOINT=https://YOUR_RESOURCE.openai.azure.com
-ASKCLAW_AZURE_OPENAI_KEY=your-azure-key
-ASKCLAW_AZURE_OPENAI_DEPLOYMENT=gpt-4o
-ASKCLAW_AZURE_OPENAI_API_VERSION=2025-01-01-preview
-```
-
-That's it. One block of env vars to switch from a shared OpenAI endpoint to your own Azure OpenAI deployment. Your data never leaves your Azure subscription.
-
 ### Production (nginx)
 
 See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Basic Auth.
@@ -122,7 +112,6 @@ See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Ba
 
 ## Roadmap
 
-- [x] Azure OpenAI first-class integration
 - [ ] Docker Compose setup
 - [ ] Multi-model selection per chat
 - [ ] Team/organization support
