@@ -145,6 +145,9 @@
           chatState.updateLastAssistant(accumulated);
         },
         onDone(full) {
+          // Strip OpenClaw internal signals — treat as empty response
+          const trimmed = full.trim();
+          if (trimmed === 'NO_REPLY' || trimmed === 'HEARTBEAT_OK') full = '';
           if (!full) {
             chatState.updateLastAssistant(`*${t(chatState.lang, 'noResponse')}*`);
           }
