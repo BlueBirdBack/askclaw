@@ -1,6 +1,7 @@
 # AskClaw
 
-> A production-ready, self-hosted AI chat platform.  
+> The web UI OpenClaw should have shipped with.  
+> Solves [15 of 22 top user pain points](https://github.com/BlueBirdBack/openclaw-pain-points) by design.  
 > Live at [askclaw.top](https://askclaw.top) · 20+ active users · MIT License
 
 ![Desktop](docs/screenshots/desktop-chat-en.png)
@@ -9,11 +10,21 @@
 
 ---
 
-## What it is
+## Why AskClaw exists
 
-AskClaw is a clean, private AI chat interface you can host on your own server. No data leaves your infrastructure. No vendor lock-in. Works with OpenAI or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
+OpenClaw is powerful but painful to use as a chat interface. Users report [22 major pain points](https://github.com/BlueBirdBack/openclaw-pain-points) — from $600/month API bills to 3.2-hour install times to silent data loss. AskClaw sidesteps 15 of them:
 
-Built for teams who want AI chat without the SaaS price tag or the privacy tradeoffs.
+| OpenClaw pain | AskClaw fix |
+|---|---|
+| $100–600/mo API costs (150K-token system prompts, $36/day heartbeats) | Clean API calls — no bloated context, no background polling |
+| 3.2-hour median install time | `pip install` + `npm install` — done |
+| Memory compaction silently deletes work | SQLite persistence + full-text search — nothing disappears |
+| Gateway token auth failures (WS 1008) | nginx Basic Auth — no tokens, no device pairing |
+| Config drift across CLI/service/auth files | One `.env` file |
+| "Bot online but silent" channel permission maze | AskClaw IS the UI — no Telegram/Discord config needed |
+| Remote access needs SSH/Tailscale tunnels | Standard HTTPS — just a URL |
+
+AskClaw is a self-hosted AI chat interface for teams who want AI chat without the pain. Works with OpenAI or any OpenAI-compatible endpoint — including [OpenClaw](https://github.com/openclaw/openclaw).
 
 ## Features
 
