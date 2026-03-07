@@ -24,7 +24,7 @@ OpenClaw 功能强大，但作为对话界面问题很多。用户反馈了 [22 
 | "机器人在线但没反应"的频道权限迷宫 | AskClaw 本身就是界面——无需 Telegram/Discord 配置 |
 | 远程访问需要 SSH/Tailscale 隧道 | 标准 HTTPS——一个 URL 就够 |
 
-AskClaw 是一个自托管的 AI 对话界面。支持 OpenAI 或任何兼容 OpenAI 接口的服务——包括 [OpenClaw](https://github.com/openclaw/openclaw)。
+AskClaw 是一个自托管的 AI 对话界面，让团队轻松使用 AI 聊天。
 
 ## 功能特性
 
