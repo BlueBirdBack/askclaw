@@ -39,13 +39,13 @@ AskClaw is a self-hosted AI chat interface for teams who want AI chat without th
 
 ## Screenshots
 
-| Empty state | Active chat |
+| Conversation with code highlighting | Full-text search across all chats |
 |---|---|
-| ![Desktop empty](docs/screenshots/desktop-empty-en.png) | ![Desktop chat](docs/screenshots/desktop-chat-en.png) |
+| ![Chat](docs/screenshots/desktop-chat-en.png) | ![Search](docs/screenshots/desktop-search-en.png) |
 
-| Mobile |
-|---|
-| ![Mobile](docs/screenshots/mobile-en.png) |
+| Markdown tables & formatting | Supports multilingual conversations |
+|---|---|
+| ![Tables](docs/screenshots/desktop-chat2-en.png) | ![Empty state](docs/screenshots/desktop-empty-en.png) |
 
 ## Stack
 
