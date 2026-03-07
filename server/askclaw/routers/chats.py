@@ -87,14 +87,18 @@ def create_chat(
             (body.id, username, title, body.model),
         )
         conn.commit()
+        row = conn.execute(
+            "SELECT created_at, updated_at FROM chats WHERE id = ?",
+            (body.id,),
+        ).fetchone()
         return ChatSummary(
             id=body.id,
             title=title,
             model=body.model,
             category_id=None,
             tag_ids=[],
-            created_at="",
-            updated_at="",
+            created_at=row["created_at"] if row else "",
+            updated_at=row["updated_at"] if row else "",
         )
     except Exception as e:
         if "UNIQUE" in str(e):

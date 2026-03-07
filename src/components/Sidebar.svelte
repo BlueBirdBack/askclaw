@@ -96,7 +96,9 @@
   }
 
   function formatDate(dateStr: string): string {
+    if (!dateStr) return '';
     const date = new Date(dateStr + 'Z');
+    if (isNaN(date.getTime())) return '';
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);

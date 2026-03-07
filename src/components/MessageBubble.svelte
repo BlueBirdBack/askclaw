@@ -59,7 +59,7 @@
   );
 </script>
 
-{#if message.role === 'user'}
+{#if message.role === 'user' && (message.content || (message.attachments ?? []).length > 0)}
   <div class="msg-wrap msg-wrap-user">
     <div class="msg msg-user">
       {#if imageAttachments.length > 0}
