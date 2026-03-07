@@ -145,6 +145,9 @@
     padding: 10px 14px;
     border-radius: 16px 16px 4px 16px;
     white-space: pre-wrap;
+    /* flex column collapses whitespace text nodes from Svelte {#if} blocks */
+    display: flex;
+    flex-direction: column;
   }
   .msg-images {
     display: flex;
