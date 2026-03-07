@@ -35,7 +35,6 @@ AskClaw is a self-hosted chat UI built on [OpenClaw](https://github.com/openclaw
 - 📱 **Responsive** — desktop, tablet, and mobile
 - 🌙 **Dark mode** — auto-follows your OS/browser theme (`prefers-color-scheme`)
 - 🔍 **Search** — full-text search across all conversations (SQLite FTS5)
-- 🔌 **Model-agnostic** — OpenAI API or any OpenAI-compatible endpoint
 - 🔒 **Auth** — HTTP Basic Auth with per-user session isolation
 
 ## Screenshots
@@ -69,17 +68,17 @@ AskClaw is a self-hosted chat UI built on [OpenClaw](https://github.com/openclaw
 Browser
   └─▶ nginx (TLS termination + Basic Auth)
         ├─▶ FastAPI backend (:8000)  ← chat history, files, search
-        └─▶ AI provider             ← OpenAI / OpenClaw / any compatible endpoint
+        └─▶ OpenClaw gateway (:18789) ← AI models, agents, tools
 ```
 
-Each user gets an isolated session. The backend stores conversations in SQLite with full-text search. The AI provider is configurable — swap it by changing one environment variable.
+Each user gets an isolated session. The backend stores conversations in SQLite with full-text search. OpenClaw handles model routing, agent orchestration, and tool execution.
 
 ## Quick Start
 
 ### Prerequisites
 - Python 3.13+
 - Node.js 18+
-- An OpenAI-compatible API endpoint
+- A running [OpenClaw](https://github.com/openclaw/openclaw) gateway
 
 ### Backend
 
@@ -105,7 +104,7 @@ npm run build      # production → dist/
 cp server/.env.example server/.env
 ```
 
-**Default (OpenAI / OpenClaw):**
+**Point to your OpenClaw config:**
 ```bash
 ASKCLAW_OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
 ```
