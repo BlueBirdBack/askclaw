@@ -33,19 +33,20 @@ AskClaw 是一个自托管的 AI 对话界面。支持 OpenAI 或任何兼容 Op
 - 📄 **导出对话** — 支持导出为 PDF 或 DOCX 文档
 - 🌐 **双语界面** — 内置中英文切换
 - 📱 **响应式布局** — 适配桌面、平板与手机
+- 🌙 **深色模式** — 自动跟随系统/浏览器主题（`prefers-color-scheme`）
 - 🔍 **全文搜索** — 基于 SQLite FTS5，搜遍所有对话记录
 - 🔌 **模型无关** — 支持 OpenAI API 或任何兼容接口
 - 🔒 **身份认证** — HTTP Basic Auth，每用户独立会话隔离
 
 ## 界面截图
 
-| 代码高亮 | Markdown 表格 |
+| 亮色模式 | 深色模式 |
 |---|---|
-| ![代码](docs/screenshots/chat-light.png) | ![表格](docs/screenshots/chat2-light.png) |
+| ![亮色](docs/screenshots/chat-light.png) | ![深色](docs/screenshots/chat-dark.png) |
 
-| 全文搜索 | 深色模式 | 手机端 |
+| Markdown 表格 | 全文搜索 | 手机端 |
 |---|---|---|
-| ![搜索](docs/screenshots/search-light.png) | ![深色](docs/screenshots/chat-dark.png) | ![手机](docs/screenshots/mobile.png) |
+| ![表格](docs/screenshots/chat2-light.png) | ![搜索](docs/screenshots/search-light.png) | ![手机](docs/screenshots/mobile.png) |
 
 ## 技术栈
 

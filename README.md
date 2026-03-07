@@ -33,19 +33,20 @@ AskClaw is a self-hosted AI chat interface for teams who want AI chat without th
 - 📄 **Export** — save conversations as PDF or DOCX
 - 🌐 **Bilingual** — English + Chinese (i18n built-in)
 - 📱 **Responsive** — desktop, tablet, and mobile
+- 🌙 **Dark mode** — auto-follows your OS/browser theme (`prefers-color-scheme`)
 - 🔍 **Search** — full-text search across all conversations (SQLite FTS5)
 - 🔌 **Model-agnostic** — OpenAI API or any OpenAI-compatible endpoint
 - 🔒 **Auth** — HTTP Basic Auth with per-user session isolation
 
 ## Screenshots
 
-| Code highlighting | Markdown tables |
+| Light mode | Dark mode |
 |---|---|
-| ![Code](docs/screenshots/chat-light.png) | ![Tables](docs/screenshots/chat2-light.png) |
+| ![Light](docs/screenshots/chat-light.png) | ![Dark](docs/screenshots/chat-dark.png) |
 
-| Full-text search | Dark mode | Mobile |
+| Markdown tables | Full-text search | Mobile |
 |---|---|---|
-| ![Search](docs/screenshots/search-light.png) | ![Dark](docs/screenshots/chat-dark.png) | ![Mobile](docs/screenshots/mobile.png) |
+| ![Tables](docs/screenshots/chat2-light.png) | ![Search](docs/screenshots/search-light.png) | ![Mobile](docs/screenshots/mobile.png) |
 
 ## Stack
 
