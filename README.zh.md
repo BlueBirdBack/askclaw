@@ -40,13 +40,20 @@ AskClaw 是一个自托管的 AI 对话界面。支持 OpenAI 或任何兼容 Op
 
 ## 界面截图
 
-| 亮色模式 | 深色模式 |
-|---|---|
-| ![亮色](docs/screenshots/chat-light.png) | ![深色](docs/screenshots/chat-dark.png) |
+**亮色模式** — 代码高亮、对话历史
+![亮色模式](docs/screenshots/chat-light.png)
 
-| Markdown 表格 | 全文搜索 | 手机端 |
-|---|---|---|
-| ![表格](docs/screenshots/chat2-light.png) | ![搜索](docs/screenshots/search-light.png) | ![手机](docs/screenshots/mobile.png) |
+**深色模式** — 自动跟随系统主题
+![深色模式](docs/screenshots/chat-dark.png)
+
+**Markdown 表格**
+![表格](docs/screenshots/chat2-light.png)
+
+**全文搜索**
+![搜索](docs/screenshots/search-light.png)
+
+**手机端适配**
+![手机端](docs/screenshots/mobile.png)
 
 ## 技术栈
 
