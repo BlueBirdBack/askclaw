@@ -2,7 +2,7 @@
 
 > The web UI OpenClaw should have shipped with.  
 > Solves [15 of 22 top user pain points](https://github.com/BlueBirdBack/openclaw-pain-points) by design.  
-> Live at [askclaw.top](https://askclaw.top) · 20+ active users · MIT License
+> Self-hosted · MIT License
 
 ![Desktop](docs/screenshots/desktop-chat-en.png)
 
@@ -131,7 +131,7 @@ See [`nginx-config-example`](docs/nginx.md) for a full nginx + TLS setup with Ba
 
 ## Live Demo
 
-[askclaw.top](https://askclaw.top) — production deployment with real users.
+[askclaw.top](https://askclaw.top) — demo deployment.
 
 ## Roadmap
 
