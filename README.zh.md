@@ -1,7 +1,8 @@
 # AskClaw
 
-> 可自托管的生产级 AI 对话平台。  
-> 线上体验：[askclaw.top](https://askclaw.top) · 20+ 活跃用户 · MIT 开源协议
+> OpenClaw 本该自带的 Web UI。  
+> 从设计上解决了 [22 个用户痛点中的 15 个](https://github.com/BlueBirdBack/openclaw-pain-points)。  
+> 自托管 · MIT 开源协议
 
 ![桌面端](docs/screenshots/desktop-chat-zh.png)
 
@@ -9,11 +10,21 @@
 
 ---
 
-## 简介
+## 为什么要做 AskClaw
 
-AskClaw 是一个简洁、私密的 AI 对话界面，可部署在你自己的服务器上。数据不会离开你的基础设施，没有供应商锁定。支持 OpenAI 或任何兼容 OpenAI 接口的服务——包括 [OpenClaw](https://github.com/openclaw/openclaw)。
+OpenClaw 功能强大，但作为对话界面问题很多。用户反馈了 [22 个主要痛点](https://github.com/BlueBirdBack/openclaw-pain-points)——从每月 $600 的 API 账单、3.2 小时的安装时间到无声的数据丢失。AskClaw 绕过了其中 15 个：
 
-为那些不想为 SaaS 付高价、也不愿妥协数据隐私的团队而生。
+| OpenClaw 痛点 | AskClaw 方案 |
+|---|---|
+| API 费用 $100–600/月（15 万 token 系统提示、心跳每天烧 $36） | 干净的 API 调用——无臃肿上下文，无后台轮询 |
+| 安装中位时间 3.2 小时 | `pip install` + `npm install`——搞定 |
+| 内存压缩静默删除工作成果 | SQLite 持久化 + 全文搜索——数据不会消失 |
+| 网关令牌认证失败（WS 1008） | nginx Basic Auth——无令牌、无设备配对 |
+| CLI/服务/认证文件之间的配置漂移 | 一个 `.env` 文件搞定 |
+| "机器人在线但没反应"的频道权限迷宫 | AskClaw 本身就是界面——无需 Telegram/Discord 配置 |
+| 远程访问需要 SSH/Tailscale 隧道 | 标准 HTTPS——一个 URL 就够 |
+
+AskClaw 是一个自托管的 AI 对话界面。支持 OpenAI 或任何兼容 OpenAI 接口的服务——包括 [OpenClaw](https://github.com/openclaw/openclaw)。
 
 ## 功能特性
 
@@ -120,7 +131,7 @@ AskClaw 使用一个独立的 OpenClaw Agent（`openclaw:askclaw`），配备最
 
 ## 线上演示
 
-[askclaw.top](https://askclaw.top) — 真实用户在用的生产环境。
+[askclaw.top](https://askclaw.top) — 演示部署。
 
 ## 路线图
 
