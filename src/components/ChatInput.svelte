@@ -74,7 +74,10 @@
 
   function autoGrow() {
     textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    const h = Math.min(textarea.scrollHeight, 120);
+    textarea.style.height = h + 'px';
+    // Show scrollbar only when content exceeds max-height
+    textarea.style.overflowY = textarea.scrollHeight > 120 ? 'auto' : 'hidden';
   }
 
   function addFiles(fileList: FileList | File[]) {
@@ -315,6 +318,7 @@
     outline: none;
     max-height: 120px;
     min-height: 44px;
+    overflow-y: hidden;
   }
   textarea:focus {
     border-color: var(--accent);
