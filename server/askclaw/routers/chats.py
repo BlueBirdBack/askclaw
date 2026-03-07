@@ -309,9 +309,13 @@ def append_messages(
 
         inserted = []
         for msg in body.messages:
+            content = (msg.content or "").strip()
+            # Skip empty messages (no content and no attachments)
+            if not content and not msg.attachment_ids:
+                continue
             cursor = conn.execute(
                 "INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)",
-                (chat_id, msg.role, msg.content),
+                (chat_id, msg.role, content),
             )
             msg_id = cursor.lastrowid
 
