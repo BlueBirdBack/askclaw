@@ -12,17 +12,17 @@
 
 ## Why AskClaw exists
 
-OpenClaw is powerful but painful to use as a chat interface. Users report [22 major pain points](https://github.com/BlueBirdBack/openclaw-pain-points) — from $600/month API bills to 3.2-hour install times to silent data loss. AskClaw sidesteps 15 of them:
+OpenClaw is powerful — but its built-in WebChat is painful. Users report [22 major pain points](https://github.com/BlueBirdBack/openclaw-pain-points). AskClaw sits on top of your existing OpenClaw and fixes 15 of them:
 
-| OpenClaw pain | AskClaw fix |
+| OpenClaw WebChat limitation | What AskClaw adds |
 |---|---|
-| $100–600/mo API costs (150K-token system prompts, $36/day heartbeats) | Clean API calls — no bloated context, no background polling |
-| 3.2-hour median install time | `pip install` + `npm install` — done |
-| Memory compaction silently deletes work | SQLite persistence + full-text search — nothing disappears |
-| Gateway token auth failures (WS 1008) | nginx Basic Auth — no tokens, no device pairing |
-| Config drift across CLI/service/auth files | One `.env` file |
-| "Bot online but silent" channel permission maze | AskClaw IS the UI — no Telegram/Discord config needed |
+| WebChat locks to one device (CLI pairing) | Multi-user — any browser, any device |
+| No search across conversations | Full-text search (SQLite FTS5) |
+| No export | PDF + DOCX export |
+| Memory compaction silently deletes history | SQLite persistence — nothing disappears |
 | Remote access needs SSH/Tailscale tunnels | Standard HTTPS — just a URL |
+| No dark mode | Auto dark mode (`prefers-color-scheme`) |
+| Channel permission maze ("bot online but silent") | Skip channels — AskClaw IS the chat UI |
 
 AskClaw is a self-hosted chat UI built on [OpenClaw](https://github.com/openclaw/openclaw) — all the power, none of the setup pain.
 
