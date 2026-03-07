@@ -4,7 +4,7 @@
 > Solves [15 of 22 top user pain points](https://github.com/BlueBirdBack/openclaw-pain-points) by design.  
 > Self-hosted · MIT License
 
-![Desktop](docs/screenshots/chat-light.png)
+![Desktop](docs/screenshots/costs-light.png)
 
 **English** · [中文](README.zh.md)
 
@@ -40,16 +40,16 @@ AskClaw is a self-hosted AI chat interface for teams who want AI chat without th
 
 ## Screenshots
 
-**Light mode** — code highlighting, conversation history
-![Light mode](docs/screenshots/chat-light.png)
+**Solve real problems** — actionable answers with tables, code blocks, and cost breakdowns
+![Cost optimization](docs/screenshots/costs-light.png)
 
-**Dark mode** — auto-follows your OS theme
-![Dark mode](docs/screenshots/chat-dark.png)
+**Dark mode** — auto-follows your OS/browser theme
+![Telegram debugging](docs/screenshots/telegram-dark.png)
 
-**Markdown tables**
-![Tables](docs/screenshots/chat2-light.png)
+**Quick deploy guides** — step-by-step with copy-paste commands
+![VPS install](docs/screenshots/install-light.png)
 
-**Full-text search** across all conversations
+**Full-text search** — find any conversation instantly
 ![Search](docs/screenshots/search-light.png)
 
 ## Stack

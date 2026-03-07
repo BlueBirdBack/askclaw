@@ -4,7 +4,7 @@
 > 从设计上解决了 [22 个用户痛点中的 15 个](https://github.com/BlueBirdBack/openclaw-pain-points)。  
 > 自托管 · MIT 开源协议
 
-![桌面端](docs/screenshots/chat-light.png)
+![桌面端](docs/screenshots/costs-light.png)
 
 [English](README.md) · **中文**
 
@@ -40,16 +40,16 @@ AskClaw 是一个自托管的 AI 对话界面。支持 OpenAI 或任何兼容 Op
 
 ## 界面截图
 
-**亮色模式** — 代码高亮、对话历史
-![亮色模式](docs/screenshots/chat-light.png)
+**解决真实问题** — 包含表格、代码块和成本分析的实用回答
+![成本优化](docs/screenshots/costs-light.png)
 
-**深色模式** — 自动跟随系统主题
-![深色模式](docs/screenshots/chat-dark.png)
+**深色模式** — 自动跟随系统/浏览器主题
+![Telegram 调试](docs/screenshots/telegram-dark.png)
 
-**Markdown 表格**
-![表格](docs/screenshots/chat2-light.png)
+**快速部署指南** — 可复制粘贴的分步命令
+![VPS 安装](docs/screenshots/install-light.png)
 
-**全文搜索**
+**全文搜索** — 即时查找任何对话
 ![搜索](docs/screenshots/search-light.png)
 
 ## 技术栈
