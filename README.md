@@ -41,19 +41,16 @@ AskClaw is a self-hosted AI chat interface for teams who want AI chat without th
 ## Screenshots
 
 **Light mode** — code highlighting, conversation history
-<img src="docs/screenshots/chat-light.png" alt="Light mode" style="border: 1px solid #d0d7de; border-radius: 8px;" />
+![Light mode](docs/screenshots/chat-light.png)
 
 **Dark mode** — auto-follows your OS theme
-<img src="docs/screenshots/chat-dark.png" alt="Dark mode" style="border: 1px solid #d0d7de; border-radius: 8px;" />
+![Dark mode](docs/screenshots/chat-dark.png)
 
 **Markdown tables**
-<img src="docs/screenshots/chat2-light.png" alt="Tables" style="border: 1px solid #d0d7de; border-radius: 8px;" />
+![Tables](docs/screenshots/chat2-light.png)
 
 **Full-text search** across all conversations
-<img src="docs/screenshots/search-light.png" alt="Search" style="border: 1px solid #d0d7de; border-radius: 8px;" />
-
-**Mobile responsive**
-<img src="docs/screenshots/mobile.png" alt="Mobile" style="border: 1px solid #d0d7de; border-radius: 8px;" width="390" />
+![Search](docs/screenshots/search-light.png)
 
 ## Stack
 
