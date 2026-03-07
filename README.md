@@ -24,7 +24,7 @@ OpenClaw is powerful but painful to use as a chat interface. Users report [22 ma
 | "Bot online but silent" channel permission maze | AskClaw IS the UI — no Telegram/Discord config needed |
 | Remote access needs SSH/Tailscale tunnels | Standard HTTPS — just a URL |
 
-AskClaw is a self-hosted AI chat interface for teams who want AI chat without the pain.
+AskClaw is a self-hosted chat UI built on [OpenClaw](https://github.com/openclaw/openclaw) — all the power, none of the setup pain.
 
 ## Features
 
