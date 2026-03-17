@@ -213,6 +213,66 @@ curl http://127.0.0.1:3001/bridge/health
 echo "打开 https://your-domain.com 开始聊天！"
 ```
 
+## 使用 Cloudflare / Using Cloudflare (推荐)
+
+使用 Cloudflare 可以隐藏服务器 IP、加速静态资源、并提供免费 SSL 管理。
+
+Using Cloudflare hides your server IP, accelerates static assets, and provides free SSL management.
+
+### 1. 添加域名到 Cloudflare / Add domain to Cloudflare
+
+登录 [https://dash.cloudflare.com](https://dash.cloudflare.com)，点击 **Add a Site**，输入你的域名并选择免费计划。
+
+Log in to [https://dash.cloudflare.com](https://dash.cloudflare.com), click **Add a Site**, enter your domain and select the Free plan.
+
+### 2. 修改域名注册商 Nameserver / Change nameservers at your registrar
+
+Cloudflare 会提供两个 nameserver（如 `aria.ns.cloudflare.com`）。登录你的域名注册商，将 nameserver 替换为 Cloudflare 提供的地址。生效可能需要几分钟到 48 小时。
+
+Cloudflare will give you two nameservers (e.g. `aria.ns.cloudflare.com`). Log in to your domain registrar and replace the existing nameservers with those provided by Cloudflare. Propagation may take a few minutes to 48 hours.
+
+### 3. 添加 A 记录（灰云）/ Add A record (grey cloud initially)
+
+在 Cloudflare DNS 控制台，添加一条 **A 记录**：
+
+In the Cloudflare DNS dashboard, add an **A record**:
+
+| 类型 / Type | 名称 / Name | 内容 / Content | 代理 / Proxy |
+|---|---|---|---|
+| A | `@` 或你的子域 | 你的 VPS IP | 🔘 仅 DNS（灰云）|
+
+> ⚠️ 申请 SSL 证书时必须先使用灰云（仅 DNS），否则 certbot 的 HTTP 验证会失败。
+>
+> Keep grey cloud (DNS only) when obtaining the SSL certificate — certbot's HTTP challenge requires a direct connection to your server.
+
+### 4. 设置 SSL 模式为 Full / Set SSL mode to Full
+
+在 Cloudflare 控制台，进入 **SSL/TLS** → **Overview**，将加密模式设置为 **Full**（不是 Full Strict）。
+
+In the Cloudflare dashboard, go to **SSL/TLS** → **Overview** and set the encryption mode to **Full** (not Full Strict).
+
+> Full 模式：Cloudflare 到源服务器使用 SSL，但不验证证书有效性。适合 certbot 自签名或 Let's Encrypt 证书。
+>
+> Full mode: Cloudflare connects to your origin over SSL but does not verify certificate validity. Works well with Let's Encrypt certificates.
+
+### 5. 申请 SSL 证书 / Obtain SSL certificate
+
+按照上方 [步骤 7](#7-ssl-证书--ssl-certificate) 运行 certbot。
+
+Follow [Step 7](#7-ssl-证书--ssl-certificate) above to run certbot.
+
+### 6. 切换为橙云（代理模式）/ Switch to orange cloud (proxied)
+
+certbot 申请成功后，回到 Cloudflare DNS 控制台，点击 A 记录旁边的云图标，将其切换为 **橙色**（已代理）。
+
+Once certbot succeeds, return to the Cloudflare DNS dashboard and click the cloud icon next to your A record to switch it to **orange** (proxied).
+
+这样流量将通过 Cloudflare CDN，服务器 IP 得到保护。
+
+Traffic will now flow through Cloudflare's CDN, protecting your server IP.
+
+---
+
 ## 常见问题 / Troubleshooting
 
 ### Bridge 启动失败 / Bridge fails to start
