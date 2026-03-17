@@ -525,14 +525,14 @@
     width: min(100%, 50rem);
     margin: 0 auto;
     padding: 0.6rem 0.7rem;
-    border-radius: 0.875rem;
+    border-radius: 0.75rem;
     background: var(--surface-2);
-    border: 1.5px solid var(--border);
-    transition: border-color 0.15s;
+    border: none;
+    transition: background 0.15s;
   }
 
   .composer-box:focus-within {
-    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 4%, var(--surface-2));
   }
 
   .composer-box.drop-target {
@@ -559,8 +559,8 @@
   .preview-file {
     width: 4rem;
     height: 4rem;
-    border-radius: 0.8rem;
-    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    border: none;
     background: color-mix(in srgb, var(--surface) 75%, white);
   }
 
@@ -596,9 +596,9 @@
     right: -0.35rem;
     width: 1.25rem;
     height: 1.25rem;
-    border: 1px solid var(--border);
+    border: none;
     border-radius: 999px;
-    background: var(--surface);
+    background: var(--surface-2);
     color: var(--text);
     display: flex;
     align-items: center;

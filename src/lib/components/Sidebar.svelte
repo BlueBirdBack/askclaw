@@ -258,12 +258,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    border: none;
+    background: transparent;
     color: var(--text-muted);
-    border-radius: 0.65rem;
+    border-radius: 0.5rem;
     cursor: pointer;
-    transition: border-color 0.12s, color 0.12s, background 0.12s, opacity 0.12s;
+    transition: color 0.12s, background 0.12s, opacity 0.12s;
   }
 
   .new-chat-btn {
@@ -279,7 +279,6 @@
 
   .new-chat-btn:hover,
   .delete-btn:hover {
-    border-color: var(--border-s);
     color: var(--text);
     background: var(--surface-2);
   }
@@ -291,14 +290,14 @@
     gap: 0.6rem;
     margin: 0.9rem 1rem 0;
     padding: 0.7rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 0.85rem;
+    border: none;
+    border-radius: 0.5rem;
     background: var(--surface-2);
     color: var(--text-muted);
   }
 
   .search-box:focus-within {
-    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
     color: var(--accent);
   }
 
@@ -330,14 +329,17 @@
 
   .chat-item,
   .result-group {
-    border: 1px solid var(--border);
-    border-radius: 0.95rem;
-    background: var(--surface);
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+  }
+
+  .chat-item:hover {
+    background: var(--surface-2);
   }
 
   .chat-item.active {
-    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-    background: color-mix(in srgb, var(--accent) 6%, white);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
   }
 
   .chat-item {
@@ -345,7 +347,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.35rem;
+    padding: 0.2rem;
   }
 
   .chat-item-btn,
