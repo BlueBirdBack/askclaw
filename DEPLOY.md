@@ -121,6 +121,7 @@ ExecStart=/usr/bin/node bridge-nats.cjs
 Restart=always
 RestartSec=5
 Environment=PORT=3001
+# Environment=AUTH_TOKEN=your-secret-token
 Environment=NATS_URL=nats://127.0.0.1:4222
 
 [Install]
@@ -203,6 +204,7 @@ RestartSec=5
 Environment=AGENT=%i
 Environment=NATS_URL=nats://127.0.0.1:4222
 Environment=GATEWAY_ORIGIN=http://127.0.0.1:18789
+# Environment=GATEWAY_TOKEN=your-openclaw-token
 
 [Install]
 WantedBy=multi-user.target
