@@ -32,7 +32,7 @@
   let pendingFirstDelta = $state(false)
   let composerValue = $state('')
   let showTokenOverlay = $state(false)
-  let authRequired = $state(true)
+  let authRequired = $state<boolean | null>(null)
   let sidebarOpen = $state(false)
   let chats: ChatSummary[] = $state([])
   let activeChatId: string | null = $state(null)
@@ -48,7 +48,7 @@
     agentItems.find((agent) => agent.id === currentAgentId) ?? null,
   )
   let isStreaming = $derived(status === 'streaming')
-  let composerDisabled = $derived(!activeAgent || (authRequired && !token))
+  let composerDisabled = $derived(!activeAgent || authRequired === null || (authRequired === true && !token))
   let composerPlaceholder = $derived(
     activeAgent ? `Message ${activeAgent.label}` : 'Send a message',
   )
@@ -65,7 +65,7 @@
   }
 
   async function refreshChats() {
-    if (!token) {
+    if (authRequired && !token) {
       chats = []
       return
     }
@@ -78,8 +78,8 @@
   }
 
   async function handleSend(text: string, files: PendingFile[] = []) {
-    if (!currentAgentId || !token) {
-      showTokenOverlay = true
+    if (!currentAgentId || (authRequired && !token)) {
+      if (authRequired) showTokenOverlay = true
       return
     }
 
@@ -93,8 +93,8 @@
   }
 
   async function handleNewChat() {
-    if (!currentAgentId || !token) {
-      showTokenOverlay = true
+    if (!currentAgentId || (authRequired && !token)) {
+      if (authRequired) showTokenOverlay = true
       return
     }
 
@@ -121,8 +121,8 @@
   }
 
   async function handleSelectChat(chatId: string, messageId?: number) {
-    if (!token) {
-      showTokenOverlay = true
+    if (authRequired && !token) {
+      if (authRequired) showTokenOverlay = true
       return
     }
 
@@ -146,8 +146,8 @@
   }
 
   async function handleDeleteChat(chatSummary: ChatSummary) {
-    if (!token) {
-      showTokenOverlay = true
+    if (authRequired && !token) {
+      if (authRequired) showTokenOverlay = true
       return
     }
 
@@ -202,9 +202,9 @@
       return
     }
 
-    if (!token) {
+    if (authRequired && !token) {
       closeForwardModal()
-      showTokenOverlay = true
+      if (authRequired) showTokenOverlay = true
       return
     }
 
