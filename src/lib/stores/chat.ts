@@ -1,6 +1,7 @@
 import { derived, get, writable } from 'svelte/store'
 
 import { getHistory, newChat, streamSend, type BridgeMessage, type ChatDetail } from '../api'
+import { redactSensitiveAuth } from './auth'
 import type { BridgeSendFile, PendingFile } from '../types'
 
 export interface ChatMessage {
@@ -358,7 +359,7 @@ function removeStreamingPlaceholder(session: ChatSession) {
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {
-    return error.message
+    return redactSensitiveAuth(error.message)
   }
 
   return 'Unknown error'

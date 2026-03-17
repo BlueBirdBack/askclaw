@@ -18,7 +18,7 @@
   import TokenOverlay from './lib/components/TokenOverlay.svelte'
   import { exportChatAsMarkdown, exportChatAsText, exportChatAsJson } from './lib/export'
   import { agents, type Agent } from './lib/stores/agents'
-  import { authToken } from './lib/stores/auth'
+  import { authToken, redactSensitiveAuth } from './lib/stores/auth'
   import { chat, currentSession, type ConnectionStatus, type ChatMessage } from './lib/stores/chat'
   import type { PendingFile } from './lib/types'
 
@@ -220,7 +220,7 @@
       const targetLabel = agentItems.find((agent) => agent.id === targetAgentId)?.label ?? targetAgentId
       showForwardStatus(`Forwarded to ${targetLabel}`, 'success')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to forward message'
+      const message = error instanceof Error ? redactSensitiveAuth(error.message) : 'Unable to forward message'
       showForwardStatus(message, 'error')
     } finally {
       closeForwardModal()

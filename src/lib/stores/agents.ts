@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store'
 
 import { getAgents, type BridgeAgent } from '../api'
+import { redactSensitiveAuth } from './auth'
 
 interface AgentsState {
   error: string | null
@@ -9,7 +10,7 @@ interface AgentsState {
 }
 
 function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Unknown error'
+  return error instanceof Error ? redactSensitiveAuth(error.message) : 'Unknown error'
 }
 
 function createAgentsStore() {

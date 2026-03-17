@@ -1,4 +1,5 @@
 import type { BridgeSendFile } from './types'
+import { redactSensitiveAuth } from './stores/auth'
 
 export interface BridgeAgent {
   id: string
@@ -113,11 +114,11 @@ async function parseError(response: Response): Promise<string> {
 
   if (contentType.includes('application/json')) {
     const payload = (await response.json()) as { error?: string }
-    return payload.error ?? `Request failed with status ${response.status}`
+    return redactSensitiveAuth(payload.error ?? `Request failed with status ${response.status}`)
   }
 
   const text = (await response.text()).trim()
-  return text || `Request failed with status ${response.status}`
+  return redactSensitiveAuth(text || `Request failed with status ${response.status}`)
 }
 
 async function requestJson<T>(path: string, options: JsonRequestOptions = {}): Promise<T> {
@@ -303,7 +304,7 @@ export async function streamSend(options: StreamSendOptions): Promise<void> {
         const data = JSON.parse(payload) as { chatId?: string; delta?: string; error?: string }
 
         if (data.error) {
-          throw new Error(data.error)
+          throw new Error(redactSensitiveAuth(data.error))
         }
 
         if (typeof data.chatId === 'string') {
@@ -334,7 +335,7 @@ export async function streamSend(options: StreamSendOptions): Promise<void> {
     const data = JSON.parse(payload) as { chatId?: string; delta?: string; error?: string }
 
     if (data.error) {
-      throw new Error(data.error)
+      throw new Error(redactSensitiveAuth(data.error))
     }
 
     if (typeof data.chatId === 'string') {
