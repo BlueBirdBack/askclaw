@@ -2,6 +2,7 @@
   import StatusDot from './StatusDot.svelte'
   import type { Agent } from '../stores/agents'
   import type { ConnectionStatus } from '../stores/chat'
+  import { settings } from '../stores/settings'
 
   interface Props {
     activeAgentId?: string
@@ -32,6 +33,12 @@
   }: Props = $props()
 
   let exportOpen = $state(false)
+  let settingsOpen = $state(false)
+
+  function handleFontSize(e: Event) {
+    const val = parseInt((e.target as HTMLInputElement).value)
+    settings.update(s => ({ ...s, fontSize: val }))
+  }
 </script>
 
 <header class="topbar">
@@ -99,6 +106,35 @@
         />
       </svg>
     </button>
+
+    <div class="settings-wrap">
+      <button class="icon-btn" type="button" title="Settings" onclick={() => settingsOpen = !settingsOpen}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+        </svg>
+      </button>
+      {#if settingsOpen}
+        <button class="settings-backdrop" type="button" onclick={() => settingsOpen = false} aria-label="Close"></button>
+        <div class="settings-dropdown">
+          <div class="settings-label">字体大小 / Font Size</div>
+          <div class="settings-row">
+            <span class="font-preview" style="font-size: 0.7rem">A</span>
+            <input
+              type="range"
+              min="75"
+              max="150"
+              step="5"
+              value={$settings.fontSize}
+              oninput={handleFontSize}
+              class="font-slider"
+            />
+            <span class="font-preview" style="font-size: 1.2rem">A</span>
+            <span class="font-value">{$settings.fontSize}%</span>
+          </div>
+        </div>
+      {/if}
+    </div>
   </div>
 </header>
 
@@ -276,6 +312,69 @@
 
   .export-item:hover {
     background: var(--surface-2);
+  }
+
+  .settings-wrap {
+    position: relative;
+  }
+
+  .settings-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+
+  .settings-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    padding: 0.75rem 1rem;
+    min-width: 220px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .settings-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .font-preview {
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .font-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .font-value {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    min-width: 2.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 
   @media (min-width: 768px) {
