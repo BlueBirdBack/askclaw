@@ -1,18 +1,18 @@
 @import 'highlight.js/styles/github.css';
 
 :root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #fafbfc;
-  --border: #e8e5de;
-  --border-s: #cdc9c0;
+  --bg: #f5f2ed;
+  --surface: #faf8f5;
+  --surface-2: #efeae4;
+  --border: #e2ddd5;
+  --border-s: #cdc7bc;
   --text: #1c1a17;
   --text-muted: #6b6258;
   --text-dim: #a09488;
   --accent: #2563eb;
   --accent-dark: #1d4ed8;
   --user-bg: #2563eb;
-  --asst-bg: #f0ede7;
+  --asst-bg: #ede8e0;
   --danger: #dc2626;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
