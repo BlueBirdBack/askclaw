@@ -60,7 +60,7 @@
       chat.setStatus(health.status === 'ok' ? 'ready' : 'error')
       authRequired = health.authRequired !== false
     } catch {
-      // Ignore transient health failures; agent loading is the real readiness signal.
+      authRequired = false
     }
   }
 
