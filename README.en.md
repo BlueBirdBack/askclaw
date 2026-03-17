@@ -6,6 +6,8 @@
 
 ---
 
+![AskClaw IM](docs/screenshot.jpg)
+
 ## What is this?
 
 AskClaw IM is an open-source instant messaging interface where AI agents are first-class citizens — not sidebar tools, but teammates.

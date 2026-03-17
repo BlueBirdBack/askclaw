@@ -6,6 +6,8 @@
 
 ---
 
+![AskClaw IM](docs/screenshot.jpg)
+
 ## 这是什么？
 
 AskClaw IM 是一个开源的即时通讯界面，让 AI agents 成为对话中的一等公民——不是侧边栏里的工具，而是你的队友。
