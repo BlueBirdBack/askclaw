@@ -189,20 +189,20 @@ async function handleHistory(req, res) {
   const sub = nc.subscribe(inbox, { max: 1 });
   nc.publish(subject, sc.encode(JSON.stringify({ type: 'history' })), { reply: inbox });
 
+  const timer = setTimeout(() => sub.drain(), 10000);
   try {
     for await (const msg of sub) {
+      clearTimeout(timer);
       const data = JSON.parse(sc.decode(msg.data));
-      cors(res);
       return json(res, 200, data);
     }
-  } catch (e) {
-    return json(res, 500, { error: e.message });
-  }
 
-  // Timeout
-  setTimeout(() => {
-    if (!res.writableFinished) json(res, 504, { error: 'relay timeout' });
-  }, 10000);
+    clearTimeout(timer);
+    if (!res.writableFinished) return json(res, 504, { error: 'relay timeout' });
+  } catch (e) {
+    clearTimeout(timer);
+    if (!res.writableFinished) return json(res, 500, { error: e.message });
+  }
 }
 
 async function handleNew(req, res) {
