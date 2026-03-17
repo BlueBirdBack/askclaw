@@ -6,9 +6,9 @@
 
 ---
 
+![AskClaw IM — 桌面端](docs/screenshot.jpg)
+
 <p align="center">
-  <img src="docs/screenshot.jpg" width="620" alt="AskClaw IM — 桌面端" />
-  <br/>
   <img src="docs/screenshot-mobile.jpg" width="300" alt="AskClaw IM — 移动端" />
 </p>
 
