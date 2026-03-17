@@ -39,7 +39,5 @@ marked.use({
 export function renderMarkdown(markdown: string): string {
   const rendered = marked.parse(markdown, { async: false })
 
-  return DOMPurify.sanitize(rendered, {
-    ALLOW_DATA_ATTR: true,
-  })
+  return DOMPurify.sanitize(rendered)
 }
