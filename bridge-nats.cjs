@@ -14,7 +14,7 @@
 
 const http = require('http');
 const fs   = require('fs');
-const { connect, StringCodec, createInbox } = require('./node_modules/nats');
+const { connect, StringCodec, createInbox } = require('nats');
 
 const PORT        = parseInt(process.env.PORT || '18795', 10);
 const AUTH_TOKEN   = process.env.AUTH_TOKEN || '';
@@ -73,11 +73,34 @@ function writeSseData(res, data) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', c => { body += c; if (body.length > 65536) reject(new Error('too large')); });
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error('request timeout'));
+    }, 30000);
+
+    req.on('data', c => {
+      if (settled) return;
+      body += c;
+      if (body.length > 65536) {
+        settled = true;
+        clearTimeout(timeout);
+        reject(new Error('too large'));
+      }
+    });
     req.on('end', () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
       try { resolve(JSON.parse(body)); } catch { reject(new Error('invalid json')); }
     });
-    req.on('error', reject);
+    req.on('error', err => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(err);
+    });
   });
 }
 

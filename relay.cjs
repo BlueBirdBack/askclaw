@@ -14,8 +14,9 @@
 
 'use strict';
 
-const WebSocket = require('/usr/lib/node_modules/openclaw/node_modules/ws/index.js');
-const { connect, StringCodec } = require('./node_modules/nats');
+const WebSocket = require('ws');
+const { randomUUID } = require('crypto');
+const { connect, StringCodec } = require('nats');
 const fs   = require('fs');
 const path = require('path');
 
@@ -37,10 +38,7 @@ function log(...args) {
 }
 
 function uuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
+  return randomUUID();
 }
 
 /* ── Gateway WebSocket session ── */

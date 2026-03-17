@@ -232,6 +232,11 @@
     showTokenOverlay = false
   }
 
+  function handleTokenClear() {
+    authToken.clearToken()
+    showTokenOverlay = false
+  }
+
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen
   }
@@ -379,6 +384,7 @@
     onCancel={() => {
       showTokenOverlay = false
     }}
+    onClear={handleTokenClear}
     onSave={handleTokenSave}
     open={showTokenOverlay}
     value={token}
