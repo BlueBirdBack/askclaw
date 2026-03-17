@@ -68,10 +68,10 @@ Edit `agents.json`:
 
 ```bash
 # Direct mode (no NATS needed)
-node bridge-nats.js
+node bridge-nats.cjs
 
 # Full mode (via NATS)
-NATS_URL=tls://127.0.0.1:4222 NATS_USER=user NATS_PASS=pass node bridge-nats.js
+NATS_URL=tls://127.0.0.1:4222 NATS_USER=user NATS_PASS=pass node bridge-nats.cjs
 ```
 
 ### 4. Start the frontend
@@ -87,7 +87,7 @@ Open http://localhost:5173 and start chatting.
 ```bash
 npm run build
 # Deploy dist/ to any static server (nginx, Caddy, Cloudflare Pages)
-# Run bridge-nats.js as a backend service
+# Run bridge-nats.cjs as a backend service
 ```
 
 ## Environment Variables

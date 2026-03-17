@@ -117,7 +117,7 @@ After=network.target nats.service
 
 [Service]
 WorkingDirectory=/opt/askclaw
-ExecStart=/usr/bin/node bridge-nats.js
+ExecStart=/usr/bin/node bridge-nats.cjs
 Restart=always
 RestartSec=5
 Environment=PORT=3001
@@ -184,7 +184,7 @@ After=network.target nats.service
 
 [Service]
 WorkingDirectory=/opt/askclaw
-ExecStart=/usr/bin/node relay.js
+ExecStart=/usr/bin/node relay.cjs
 Restart=always
 RestartSec=5
 Environment=AGENT=%i

@@ -68,10 +68,10 @@ npm install
 
 ```bash
 # 直连模式（无需 NATS）
-node bridge-nats.js
+node bridge-nats.cjs
 
 # 完整模式（通过 NATS）
-NATS_URL=tls://127.0.0.1:4222 NATS_USER=user NATS_PASS=pass node bridge-nats.js
+NATS_URL=tls://127.0.0.1:4222 NATS_USER=user NATS_PASS=pass node bridge-nats.cjs
 ```
 
 ### 4. 启动前端
@@ -87,7 +87,7 @@ npm run dev
 ```bash
 npm run build
 # 将 dist/ 部署到任意静态服务器（nginx、Caddy、Cloudflare Pages）
-# bridge-nats.js 作为后端服务运行
+# bridge-nats.cjs 作为后端服务运行
 ```
 
 ## 环境变量
