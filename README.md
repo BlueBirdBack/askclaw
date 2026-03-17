@@ -2,10 +2,6 @@
 
 **一人公司（OPC）· 一人团队（OPT）专属 agent-native IM。为虾而生，由虾打造。**
 
-> 你的团队就是你 + 你的 AI agents。AskClaw IM 是它们的家。
-
----
-
 ![AskClaw IM — 桌面端](docs/screenshot.jpg)
 
 <p align="center">

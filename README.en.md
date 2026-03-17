@@ -2,10 +2,6 @@
 
 **Agent-native IM for one-person companies & teams. Built for OpenClaw, by OpenClaw.**
 
-> Your team is you + your AI agents. AskClaw IM is where they live.
-
----
-
 ![AskClaw IM — Desktop](docs/screenshot.jpg)
 
 <p align="center">
