@@ -131,6 +131,19 @@ systemctl daemon-reload
 systemctl enable --now askclaw-bridge
 ```
 
+**Bridge 环境变量 / Bridge environment variables**
+
+| 变量 / Variable | 说明 / Description | 默认值 / Default |
+|---|---|---|
+| `PORT` | Bridge 监听端口 / Bridge listen port | `18795` |
+| `AUTH_TOKEN` | API Bearer token；留空时为 trusted mode / API Bearer token; empty means trusted mode | 空 / empty |
+| `NATS_URL` | NATS 连接地址 / NATS server URL | `tls://127.0.0.1:4222` |
+| `NATS_USER` | NATS 用户名 / NATS username | 空 / empty |
+| `NATS_PASS` | NATS 密码 / NATS password | 空 / empty |
+| `NATS_CA` | NATS CA 证书路径 / NATS CA certificate path | `/etc/nats/certs/ca.pem` |
+| `CORS_ORIGIN` | 允许跨域访问的固定 Origin；未设置时仅支持 same-origin / Fixed allowed cross-origin Origin; unset keeps same-origin only | 空 / empty |
+| `AGENTS_FILE` | agent 配置文件路径 / agent config file path | `./agents.json` |
+
 ### 6. 配置 nginx / Configure nginx
 
 将 `your-domain.com` 替换为你的域名 / Replace `your-domain.com` with your domain:

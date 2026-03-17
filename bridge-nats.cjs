@@ -22,6 +22,7 @@ const NATS_URL     = process.env.NATS_URL   || 'tls://127.0.0.1:4222';
 const NATS_USER      = process.env.NATS_USER  || '';
 const NATS_PASS      = process.env.NATS_PASS  || '';
 const NATS_CA      = process.env.NATS_CA    || '/etc/nats/certs/ca.pem';
+const CORS_ORIGIN  = process.env.CORS_ORIGIN || '';
 const AGENTS_FILE  = process.env.AGENTS_FILE || './agents.json';
 
 const sc = StringCodec();
@@ -47,9 +48,12 @@ function checkAuth(req) {
 }
 
 function cors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (!CORS_ORIGIN) return;
+
+  res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
 }
 
 function json(res, code, data) {
