@@ -17,7 +17,7 @@ const fs   = require('fs');
 const { connect, StringCodec, createInbox } = require('./node_modules/nats');
 
 const PORT        = parseInt(process.env.PORT || '18795', 10);
-const AUTH_TOKEN   = process.env.AUTH_TOKEN || '8771863e64233858401a4c1aeec80c5c0e475a5ccca93cac';
+const AUTH_TOKEN   = process.env.AUTH_TOKEN || '';
 const NATS_URL     = process.env.NATS_URL   || 'tls://127.0.0.1:4222';
 const NATS_USER      = process.env.NATS_USER  || '';
 const NATS_PASS      = process.env.NATS_PASS  || '';
@@ -42,6 +42,7 @@ function loadAgents() {
 }
 
 function checkAuth(req) {
+  if (!AUTH_TOKEN) return true;  // no token configured = self-hosted trusted mode
   return (req.headers['authorization'] || '') === `Bearer ${AUTH_TOKEN}`;
 }
 
@@ -76,6 +77,7 @@ async function handleHealth(req, res) {
     agents: Object.keys(agents).map(id => ({
       id, label: agents[id].label, emoji: agents[id].emoji
     })),
+    authRequired: Boolean(AUTH_TOKEN),
     uptime: Math.floor(process.uptime()),
     ts: Date.now()
   });

@@ -71,6 +71,7 @@ interface ForwardResponse {
 export interface HealthResponse {
   status: string
   agents: BridgeAgent[]
+  authRequired: boolean
   uptime: number
   ts: number
 }

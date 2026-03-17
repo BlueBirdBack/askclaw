@@ -32,6 +32,7 @@
   let pendingFirstDelta = $state(false)
   let composerValue = $state('')
   let showTokenOverlay = $state(false)
+  let authRequired = $state(true)
   let sidebarOpen = $state(false)
   let chats: ChatSummary[] = $state([])
   let activeChatId: string | null = $state(null)
@@ -47,7 +48,7 @@
     agentItems.find((agent) => agent.id === currentAgentId) ?? null,
   )
   let isStreaming = $derived(status === 'streaming')
-  let composerDisabled = $derived(!activeAgent || !token)
+  let composerDisabled = $derived(!activeAgent || (authRequired && !token))
   let composerPlaceholder = $derived(
     activeAgent ? `Message ${activeAgent.label}` : 'Send a message',
   )
@@ -57,6 +58,7 @@
     try {
       const health = await getHealth()
       chat.setStatus(health.status === 'ok' ? 'ready' : 'error')
+      authRequired = health.authRequired !== false
     } catch {
       // Ignore transient health failures; agent loading is the real readiness signal.
     }
@@ -291,7 +293,7 @@
   })
 
   $effect(() => {
-    if (!token) {
+    if (!token && authRequired) {
       showTokenOverlay = true
     }
   })
