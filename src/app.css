@@ -1,0 +1,124 @@
+@import 'highlight.js/styles/github.css';
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #fafbfc;
+  --border: #e8e5de;
+  --border-s: #cdc9c0;
+  --text: #1c1a17;
+  --text-muted: #6b6258;
+  --text-dim: #a09488;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --user-bg: #2563eb;
+  --asst-bg: #f0ede7;
+  --danger: #dc2626;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  color-scheme: light;
+  font-synthesis: none;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+textarea {
+  color: inherit;
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, white);
+  outline-offset: 2px;
+}
+
+a {
+  color: inherit;
+}
+
+#app {
+  overflow: hidden;
+  width: 100%;
+}
+
+.app-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 76rem;
+  height: calc(100dvh - var(--safe-t) - var(--safe-b));
+  background: var(--surface);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+}
+
+.app-main {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  background: var(--surface);
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    grid-template-columns: minmax(17.5rem, 20rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 840px) {
+  body {
+    padding:
+      calc(var(--safe-t) + 1rem)
+      calc(var(--safe-r) + 1rem)
+      calc(var(--safe-b) + 1rem)
+      calc(var(--safe-l) + 1rem);
+  }
+}
+
+textarea {
+  resize: none !important;
+  -webkit-appearance: none;
+}
+
+::-webkit-resizer {
+  display: none;
+}
