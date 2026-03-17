@@ -145,6 +145,8 @@ systemctl enable --now askclaw-bridge
 | `CORS_ORIGIN` | 允许跨域访问的固定 Origin；未设置时仅支持 same-origin / Fixed allowed cross-origin Origin; unset keeps same-origin only | 空 / empty |
 | `AGENTS_FILE` | agent 配置文件路径 / agent config file path | `./agents.json` |
 
+Note: The `nats://127.0.0.1:4222` values in the example service files are intended for loopback-only deployments on the same host. If NATS runs on a remote host, use `tls://...` for `NATS_URL` and configure `NATS_CA`.
+
 ### 6. 配置 nginx / Configure nginx
 
 将 `your-domain.com` 替换为你的域名 / Replace `your-domain.com` with your domain:
