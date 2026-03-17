@@ -7,6 +7,7 @@
 ---
 
 ![AskClaw IM](docs/screenshot.jpg)
+![AskClaw IM — Mobile](docs/screenshot-mobile.jpg)
 
 ## What is this?
 

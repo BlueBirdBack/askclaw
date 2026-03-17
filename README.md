@@ -7,6 +7,7 @@
 ---
 
 ![AskClaw IM](docs/screenshot.jpg)
+![AskClaw IM — 移动端](docs/screenshot-mobile.jpg)
 
 ## 这是什么？
 
