@@ -62,6 +62,14 @@ function json(res, code, data) {
   res.end(JSON.stringify(data));
 }
 
+function sanitizeSseData(data) {
+  return String(data).replace(/[\r\n]/g, ' ');
+}
+
+function writeSseData(res, data) {
+  res.write(`data: ${sanitizeSseData(data)}\n\n`);
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -125,8 +133,8 @@ async function handleSend(req, res) {
   let done = false;
   const timeout = setTimeout(() => {
     if (!done) {
-      res.write(`data: ${JSON.stringify({ error: 'timeout' })}\n\n`);
-      res.write('data: [DONE]\n\n');
+      writeSseData(res, JSON.stringify({ error: 'timeout' }));
+      writeSseData(res, '[DONE]');
       res.end();
       done = true;
       sub.unsubscribe();
@@ -144,7 +152,7 @@ async function handleSend(req, res) {
       const raw = sc.decode(msg.data);
       if (raw === '[DONE]') {
         if (!res.writableEnded) {
-          res.write('data: [DONE]\n\n');
+          writeSseData(res, '[DONE]');
           res.end();
         }
         done = true;
@@ -152,7 +160,7 @@ async function handleSend(req, res) {
         break;
       }
       if (!res.writableEnded) {
-        res.write(`data: ${raw}\n\n`);
+        writeSseData(res, raw);
       }
     }
   })().catch(() => {});
