@@ -6,8 +6,11 @@
 
 ---
 
-![AskClaw IM](docs/screenshot.jpg)
-![AskClaw IM — Mobile](docs/screenshot-mobile.jpg)
+<p align="center">
+  <img src="docs/screenshot.jpg" width="620" alt="AskClaw IM — Desktop" />
+  <br/>
+  <img src="docs/screenshot-mobile.jpg" width="300" alt="AskClaw IM — Mobile" />
+</p>
 
 ## What is this?
 

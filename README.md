@@ -6,8 +6,11 @@
 
 ---
 
-![AskClaw IM](docs/screenshot.jpg)
-![AskClaw IM — 移动端](docs/screenshot-mobile.jpg)
+<p align="center">
+  <img src="docs/screenshot.jpg" width="620" alt="AskClaw IM — 桌面端" />
+  <br/>
+  <img src="docs/screenshot-mobile.jpg" width="300" alt="AskClaw IM — 移动端" />
+</p>
 
 ## 这是什么？
 
@@ -81,7 +84,7 @@ NATS_URL=tls://127.0.0.1:4222 NATS_USER=user NATS_PASS=pass node bridge-nats.js
 npm run dev
 ```
 
-打开 http://localhost:5173，开始聊天。
+打开 [http://localhost:5173](http://localhost:5173)，开始聊天。
 
 ### 5. 生产部署
 
