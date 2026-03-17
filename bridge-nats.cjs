@@ -221,9 +221,18 @@ async function handleNew(req, res) {
   const sub = nc.subscribe(inbox, { max: 1 });
   nc.publish(subject, sc.encode(JSON.stringify({ type: 'new' })), { reply: inbox });
 
-  for await (const msg of sub) {
-    const data = JSON.parse(sc.decode(msg.data));
-    return json(res, 200, data);
+  const timer = setTimeout(() => sub.drain(), 10000);
+  try {
+    for await (const msg of sub) {
+      clearTimeout(timer);
+      const data = JSON.parse(sc.decode(msg.data));
+      return json(res, 200, data);
+    }
+
+    if (!res.writableFinished) json(res, 504, { error: 'relay timeout' });
+  } catch (e) {
+    clearTimeout(timer);
+    if (!res.writableFinished) json(res, 500, { error: e.message });
   }
 }
 
