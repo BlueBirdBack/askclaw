@@ -246,7 +246,6 @@ async function main() {
   const tlsOpts = {};
   if (NATS_CA && fs.existsSync(NATS_CA)) {
     tlsOpts.ca = fs.readFileSync(NATS_CA);
-    tlsOpts.checkServerIdentity = () => undefined;
   }
 
   nc = await connect({
