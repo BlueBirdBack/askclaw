@@ -248,6 +248,10 @@ const server = http.createServer(async (req, res) => {
 async function main() {
   loadAgents();
 
+  if (!AUTH_TOKEN) {
+    log('⚠️ AUTH_TOKEN not set — running in trusted mode (no authentication). Set AUTH_TOKEN env var to enable auth.');
+  }
+
   // Connect to NATS
   const tlsOpts = {};
   if (NATS_CA && fs.existsSync(NATS_CA)) {
