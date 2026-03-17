@@ -88,6 +88,8 @@ async function handleHealth(req, res) {
 }
 
 async function handleAgents(req, res) {
+  if (!checkAuth(req)) return json(res, 401, { error: 'unauthorized' });
+
   const list = Object.entries(agents).map(([id, a]) => ({
     id, label: a.label, emoji: a.emoji
   }));

@@ -265,12 +265,24 @@
   })
 
   $effect(() => {
-    void agents.load()
+    void loadBridgeHealth()
+  })
+
+  $effect(() => {
+    if (authRequired === null) {
+      return
+    }
+
+    if (authRequired && !token) {
+      agents.clear()
+      return
+    }
+
+    void agents.load(token || undefined)
       .then(() => {
         chat.setStatus('ready')
       })
       .catch(() => {})
-    void loadBridgeHealth()
   })
 
   $effect(() => {

@@ -20,11 +20,18 @@ function createAgentsStore() {
   })
 
   return {
-    async load() {
+    clear() {
+      update(() => ({
+        error: null,
+        items: [],
+        loading: false,
+      }))
+    },
+    async load(token?: string) {
       update((state) => ({ ...state, error: null, loading: true }))
 
       try {
-        const items = await getAgents()
+        const items = await getAgents(token)
         update(() => ({ error: null, items, loading: false }))
         return items
       } catch (error) {

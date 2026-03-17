@@ -149,8 +149,8 @@ function parseSseEvent(chunk: string): string[] {
   return payloads
 }
 
-export function getAgents(signal?: AbortSignal): Promise<BridgeAgent[]> {
-  return requestJson<BridgeAgent[]>('/bridge/agents', { signal })
+export function getAgents(token?: string, signal?: AbortSignal): Promise<BridgeAgent[]> {
+  return requestJson<BridgeAgent[]>('/bridge/agents', { signal, token })
 }
 
 export async function getHistory(
