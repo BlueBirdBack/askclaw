@@ -520,6 +520,11 @@ export const chat = {
 
     const payload = await prepareMessagePayload(text, pendingFiles)
 
+    // Re-check after async file prep — another send may have started while we awaited
+    if (activeController) {
+      return
+    }
+
     const controller = new AbortController()
     activeController = controller
     const assistantMessage = createMessage('assistant', '')
