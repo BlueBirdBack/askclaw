@@ -17,6 +17,7 @@ const fs   = require('fs');
 const { connect, StringCodec, createInbox } = require('nats');
 
 const PORT        = parseInt(process.env.PORT || '18795', 10);
+const BIND_HOST    = process.env.BIND_HOST || '127.0.0.1';
 const AUTH_TOKEN   = process.env.AUTH_TOKEN || '';
 const NATS_URL     = process.env.NATS_URL   || 'tls://127.0.0.1:4222';
 const NATS_USER      = process.env.NATS_USER  || '';
@@ -315,8 +316,8 @@ async function main() {
   });
   log('NATS connected');
 
-  server.listen(PORT, '127.0.0.1', () => {
-    log(`Bridge listening on http://127.0.0.1:${PORT}`);
+  server.listen(PORT, BIND_HOST, () => {
+    log(`Bridge listening on http://${BIND_HOST}:${PORT}`);
     log(`Agents: ${Object.keys(agents).join(', ')}`);
   });
 }
