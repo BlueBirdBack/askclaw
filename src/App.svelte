@@ -103,8 +103,12 @@
     }
 
     composerValue = ''
-    await chat.clearAgent(currentAgentId, token)
-    await refreshChats()
+    try {
+      await chat.clearAgent(currentAgentId, token)
+      await refreshChats()
+    } catch {
+      chat.setStatus('error')
+    }
 
     if (window.innerWidth < 768) {
       sidebarOpen = false
@@ -288,7 +292,8 @@
         chat.setStatus('ready')
       })
       .catch(() => {
-        // agentError is set in the store — surfaced via agentError binding in TabBar/EmptyState
+        // Error surfaced via status='error' → StatusDot in TabBar turns red
+        // agentError string is tracked but not rendered as text (accepted limitation)
         chat.setStatus('error')
       })
   })
