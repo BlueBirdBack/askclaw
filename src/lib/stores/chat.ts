@@ -4,7 +4,14 @@ import { getHistory, newChat, streamSend, type BridgeMessage, type ChatDetail } 
 import { redactSensitiveAuth } from './auth'
 import type { BridgeSendFile, PendingFile } from '../types'
 
+export interface MessageAttachment {
+  name: string
+  type: string
+  url: string  // data URL or object URL for display
+}
+
 export interface ChatMessage {
+  attachments?: MessageAttachment[]
   content: string
   id: string
   persistedId: number | null
@@ -37,6 +44,7 @@ type ContentBlock =
   | { type: 'input_image'; source: { type: 'base64'; media_type: string; data: string } }
 
 interface PreparedMessagePayload {
+  attachments: MessageAttachment[]
   displayText: string
   files: BridgeSendFile[]
   requestText: string
@@ -191,6 +199,7 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
 
   if (pendingFiles.length === 0) {
     return {
+      attachments: [],
       displayText: trimmed,
       files: [],
       requestText: trimmed,
@@ -204,6 +213,7 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
   const contentBlocks: ContentBlock[] = []
   const displaySections: string[] = []
   const files: BridgeSendFile[] = []
+  const messageAttachments: MessageAttachment[] = []
 
   for (const pendingFile of pendingFiles) {
     const file = pendingFile.file
@@ -238,11 +248,16 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
           type: 'base64',
         },
       })
-      displaySections.push(`[Image attached: ${file.name}]`)
+      // Don't add text placeholder — image renders inline via attachments
       files.push({
         data: base64,
         name: file.name,
         type,
+      })
+      messageAttachments.push({
+        name: file.name,
+        type,
+        url: dataUrl,
       })
       continue
     }
@@ -275,6 +290,7 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
   const displayText = [...displaySections, userText].filter(Boolean).join('\n\n')
 
   return {
+    attachments: messageAttachments,
     displayText,
     files,
     requestText: userText,
@@ -299,10 +315,12 @@ function createMessage(
   content: string,
   ts = Date.now(),
   persistedId: number | null = null,
+  attachments?: MessageAttachment[],
 ): ChatMessage {
   messageSequence += 1
 
   return {
+    attachments: attachments?.length ? attachments : undefined,
     content,
     id: persistedId ? `persisted-${persistedId}` : `message-${ts}-${messageSequence}`,
     persistedId,
@@ -536,7 +554,7 @@ export const chat = {
       session.historyLoaded = true
       session.messages = [
         ...session.messages,
-        createMessage('user', payload.displayText),
+        createMessage('user', payload.displayText, Date.now(), null, payload.attachments),
         assistantMessage,
       ]
       session.pendingFirstDelta = true

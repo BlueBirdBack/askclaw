@@ -104,6 +104,17 @@
     {:else}
       <div class="bubble" use:wireCopyButtons>
         {#if isUser}
+          {#if message.attachments?.length}
+            <div class="image-attachments">
+              {#each message.attachments as att}
+                {#if att.type.startsWith('image/')}
+                  <img alt={att.name} class="attachment-image" src={att.url} />
+                {:else}
+                  <span class="attachment-file">📎 {att.name}</span>
+                {/if}
+              {/each}
+            </div>
+          {/if}
           {message.content}
         {:else}
           {@html renderMarkdown(message.content)}
@@ -230,6 +241,29 @@
     padding: 0.6rem 0.9rem;
     border-radius: 1.1rem 1.1rem 0.25rem 1.1rem;
     white-space: pre-wrap;
+  }
+
+  .image-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .attachment-image {
+    max-width: 280px;
+    max-height: 280px;
+    border-radius: 0.7rem;
+    object-fit: cover;
+    cursor: pointer;
+  }
+
+  .attachment-file {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 0.82rem;
   }
 
   .msg-actions {
