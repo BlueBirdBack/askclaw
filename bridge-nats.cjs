@@ -83,7 +83,7 @@ function readBody(req) {
     req.on('data', c => {
       if (settled) return;
       body += c;
-      if (body.length > 65536) {
+      if (body.length > 10 * 1024 * 1024) {  // 10MB — base64 images are large
         settled = true;
         clearTimeout(timeout);
         reject(new Error('too large'));
@@ -164,9 +164,15 @@ async function handleSend(req, res) {
     }
   }, 120000); // 2 min timeout
 
+  // Build NATS payload — include files/attachments if present
+  const natsPayload = { type: 'send', text };
+  if (Array.isArray(body.files) && body.files.length > 0) {
+    natsPayload.files = body.files;
+  }
+
   // Publish request to NATS with reply subject
-  nc.publish(subject, sc.encode(JSON.stringify({ type: 'send', text })), { reply: inbox });
-  log(`→ ${subject}: "${text.substring(0, 50)}..."`);
+  nc.publish(subject, sc.encode(JSON.stringify(natsPayload)), { reply: inbox });
+  log(`→ ${subject}: "${text.substring(0, 50)}..."${natsPayload.files ? ` [${natsPayload.files.length} file(s)]` : ''}`);
 
   // Stream replies back as SSE
   (async () => {
@@ -297,12 +303,15 @@ async function main() {
   if (NATS_CA && fs.existsSync(NATS_CA)) {
     tlsOpts.ca = fs.readFileSync(NATS_CA);
   }
+  // Skip hostname verification for loopback — cert has IP:127.0.0.1 but
+  // nats.js may resolve to "localhost" for SNI, causing altname mismatch
+  tlsOpts.checkServerIdentity = () => undefined;
 
   nc = await connect({
     servers: NATS_URL,
     user: NATS_USER,
     pass: NATS_PASS,
-    tls: Object.keys(tlsOpts).length > 0 ? tlsOpts : undefined
+    tls: tlsOpts
   });
   log('NATS connected');
 

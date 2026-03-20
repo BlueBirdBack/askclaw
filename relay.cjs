@@ -167,7 +167,7 @@ class GatewaySession {
     nc.publish(subject, sc.encode(payload));
   }
 
-  async sendMessage(text, replySubject) {
+  async sendMessage(text, replySubject, files) {
     if (!this.connected || !this.ws) {
       this._publishReply(replySubject, { error: 'gateway not connected' });
       this._publishReply(replySubject, '[DONE]');
@@ -188,13 +188,28 @@ class GatewaySession {
       this.pendingRequests.set(reqId, { resolve, reject });
     });
 
+    // Build chat.send params — include attachments if files are present
+    const params = {
+      sessionKey: 'main',
+      message: text,
+      idempotencyKey: uuid()
+    };
+
+    if (Array.isArray(files) && files.length > 0) {
+      // Convert frontend file format → gateway attachment format
+      // Frontend sends: { data: base64, name: string, type: mimeType }
+      // Gateway expects: { content: base64, fileName: string, mimeType: string }
+      params.attachments = files.map(f => ({
+        content: f.data,
+        fileName: f.name,
+        mimeType: f.type
+      }));
+      log(`Sending ${files.length} attachment(s) to gateway`);
+    }
+
     this.ws.send(JSON.stringify({
       type: 'req', id: reqId, method: 'chat.send',
-      params: {
-        sessionKey: 'main',
-        message: text,
-        idempotencyKey: uuid()
-      }
+      params
     }));
 
     try {
@@ -284,8 +299,9 @@ async function main() {
     }
 
     if (req.type === 'send') {
-      log(`Chat request: "${(req.text || '').substring(0, 50)}..." → reply ${replySubject}`);
-      gw.sendMessage(req.text, replySubject);
+      const fileCount = Array.isArray(req.files) ? req.files.length : 0;
+      log(`Chat request: "${(req.text || '').substring(0, 50)}..."${fileCount ? ` [${fileCount} file(s)]` : ''} → reply ${replySubject}`);
+      gw.sendMessage(req.text, replySubject, req.files);
     } else if (req.type === 'history') {
       log('History request');
       gw.getHistory(replySubject);
