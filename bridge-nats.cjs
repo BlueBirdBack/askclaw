@@ -285,6 +285,13 @@ const server = http.createServer(async (req, res) => {
     if (path === '/bridge/history' && req.method === 'GET')  return await handleHistory(req, res);
     if (path === '/bridge/new'     && req.method === 'POST') return await handleNew(req, res);
 
+    // Chat persistence stubs — frontend expects these, return empty/ok for now
+    if (path === '/bridge/chats' && req.method === 'GET') return json(res, 200, []);
+    if (path.startsWith('/bridge/chats/') && path.endsWith('/load') && req.method === 'POST') return json(res, 200, { ok: true });
+    if (path.startsWith('/bridge/chats/') && req.method === 'GET')    return json(res, 200, { id: 'none', messages: [] });
+    if (path.startsWith('/bridge/chats/') && req.method === 'DELETE') return json(res, 200, { ok: true });
+    if (path === '/bridge/search' && req.method === 'GET') return json(res, 200, []);
+
     json(res, 404, { error: 'not found' });
   } catch (e) {
     log('Error:', e.message);
