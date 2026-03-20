@@ -287,7 +287,10 @@
       .then(() => {
         chat.setStatus('ready')
       })
-      .catch(() => {})
+      .catch(() => {
+        // agentError is set in the store — surfaced via agentError binding in TabBar/EmptyState
+        chat.setStatus('error')
+      })
   })
 
   $effect(() => {
@@ -296,7 +299,8 @@
   })
 
   $effect(() => {
-    if (token) {
+    const authOk = authRequired === false || (authRequired === true && Boolean(token))
+    if (authOk) {
       void refreshChats()
     } else {
       chats = []
@@ -304,7 +308,10 @@
   })
 
   $effect(() => {
-    if (token && currentAgentId) {
+    // Load history when we have an agent selected and auth is resolved.
+    // In trusted mode (authRequired=false), no token is needed — load immediately.
+    const authOk = authRequired === false || (authRequired === true && Boolean(token))
+    if (authOk && currentAgentId) {
       void chat.loadHistory(currentAgentId, token)
     }
   })

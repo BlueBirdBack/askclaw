@@ -562,7 +562,8 @@ export const chat = {
             )
 
             if (streamingMessage) {
-              streamingMessage.content = delta
+              // Relay sends incremental chunks — accumulate, don't replace
+              streamingMessage.content += delta
             }
 
             session.pendingFirstDelta = false
