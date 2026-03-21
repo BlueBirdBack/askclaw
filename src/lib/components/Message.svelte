@@ -1,6 +1,7 @@
 <script lang="ts">
   import { renderMarkdown } from '../markdown'
-  import type { ChatMessage } from '../stores/chat'
+  import { authToken } from '../stores/auth'
+  import type { ChatMessage, MessageAttachment } from '../stores/chat'
 
   interface Props {
     agentLabel?: string
@@ -28,6 +29,43 @@
   let copiedMessage = $state(false)
   let messageCopyTimeout = 0
   let canForward = $derived(!isUser && Boolean(onForward) && Boolean(message.content.trim()))
+  let token = $state('')
+  let resolvedAttachments = $state<(MessageAttachment & { displayUrl: string })[]>([])
+
+  function revokeBlobUrls(attachments: (MessageAttachment & { displayUrl: string })[]) {
+    for (const attachment of attachments) {
+      if (attachment.displayUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(attachment.displayUrl)
+      }
+    }
+  }
+
+  async function resolveAttachment(
+    attachment: MessageAttachment,
+    currentToken: string,
+  ): Promise<MessageAttachment & { displayUrl: string }> {
+    if (!attachment.url.startsWith('/bridge/files/')) {
+      return {
+        ...attachment,
+        displayUrl: attachment.url,
+      }
+    }
+
+    const headers: HeadersInit = currentToken
+      ? { Authorization: `Bearer ${currentToken}` }
+      : {}
+
+    const response = await fetch(attachment.url, { headers })
+    if (!response.ok) {
+      throw new Error(`Unable to load attachment: ${attachment.name}`)
+    }
+
+    const blob = await response.blob()
+    return {
+      ...attachment,
+      displayUrl: URL.createObjectURL(blob),
+    }
+  }
 
   async function handleCodeCopy(event: Event) {
     const target = event.target
@@ -86,6 +124,56 @@
       },
     }
   }
+
+  $effect(() => {
+    const unsubscribe = authToken.subscribe((value) => {
+      token = value
+    })
+
+    return unsubscribe
+  })
+
+  $effect(() => {
+    token
+    const attachments = message.attachments ?? []
+    let cancelled = false
+    let activeAttachments: (MessageAttachment & { displayUrl: string })[] = []
+
+    resolvedAttachments = []
+
+    if (attachments.length === 0) {
+      return () => {
+        revokeBlobUrls(activeAttachments)
+      }
+    }
+
+    void (async () => {
+      const nextAttachments: (MessageAttachment & { displayUrl: string })[] = []
+      for (const attachment of attachments) {
+        try {
+          nextAttachments.push(await resolveAttachment(attachment, token))
+        } catch {
+          nextAttachments.push({
+            ...attachment,
+            displayUrl: attachment.url,
+          })
+        }
+      }
+
+      if (cancelled) {
+        revokeBlobUrls(nextAttachments)
+        return
+      }
+
+      activeAttachments = nextAttachments
+      resolvedAttachments = nextAttachments
+    })()
+
+    return () => {
+      cancelled = true
+      revokeBlobUrls(activeAttachments)
+    }
+  })
 </script>
 
 <article class:highlighted class={`msg-row ${isUser ? 'user' : 'assistant'}`}>
@@ -104,13 +192,21 @@
     {:else}
       <div class="bubble" use:wireCopyButtons>
         {#if isUser}
-          {#if message.attachments?.length}
+          {#if resolvedAttachments.length}
             <div class="image-attachments">
-              {#each message.attachments as att}
-                {#if att.type.startsWith('image/')}
-                  <img alt={att.name} class="attachment-image" src={att.url} />
+              {#each resolvedAttachments as att}
+                {#if att.type.startsWith('image/') && (!att.url.startsWith('/bridge/files/') || att.displayUrl !== att.url)}
+                  <img alt={att.name} class="attachment-image" src={att.displayUrl} />
                 {:else}
-                  <span class="attachment-file">📎 {att.name}</span>
+                  <a
+                    class="attachment-file"
+                    download={att.name}
+                    href={att.displayUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {att.name}
+                  </a>
                 {/if}
               {/each}
             </div>
@@ -259,11 +355,18 @@
   }
 
   .attachment-file {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     padding: 0.3rem 0.6rem;
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.15);
     font-size: 0.82rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .attachment-file:hover {
+    background: rgba(255, 255, 255, 0.22);
   }
 
   .msg-actions {

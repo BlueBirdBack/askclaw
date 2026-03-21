@@ -77,6 +77,14 @@ export interface HealthResponse {
   ts: number
 }
 
+export interface UploadedFile {
+  id: string
+  filename: string
+  content_type: string
+  size: number
+  url: string
+}
+
 interface JsonRequestOptions {
   body?: unknown
   method?: 'DELETE' | 'GET' | 'POST'
@@ -256,6 +264,29 @@ export async function forwardMessage(
     method: 'POST',
     token,
   })
+}
+
+export async function uploadFiles(files: File[], token: string): Promise<UploadedFile[]> {
+  if (files.length === 0) {
+    return []
+  }
+
+  const formData = new FormData()
+  for (const file of files) {
+    formData.append('files', file)
+  }
+
+  const response = await fetch('/bridge/upload', {
+    body: formData,
+    headers: withAuth({}, token),
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+
+  return (await response.json()) as UploadedFile[]
 }
 
 export async function streamSend(options: StreamSendOptions): Promise<void> {

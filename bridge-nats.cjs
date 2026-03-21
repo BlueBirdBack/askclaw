@@ -14,6 +14,8 @@
 
 const http = require('http');
 const fs   = require('fs');
+const nodePath = require('path');
+const crypto = require('crypto');
 const { connect, StringCodec, createInbox } = require('nats');
 
 const PORT        = parseInt(process.env.PORT || '18795', 10);
@@ -25,10 +27,16 @@ const NATS_PASS      = process.env.NATS_PASS  || '';
 const NATS_CA      = process.env.NATS_CA    || '/etc/nats/certs/ca.pem';
 const CORS_ORIGIN  = process.env.CORS_ORIGIN || '';
 const AGENTS_FILE  = process.env.AGENTS_FILE || './agents.json';
+const UPLOAD_DIR   = process.env.UPLOAD_DIR || '/opt/askclaw-im-bridge/uploads';
+const MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_UPLOAD_FILES = 5;
+const MAX_UPLOAD_REQUEST_SIZE = 50 * 1024 * 1024;
+const UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
 
 const sc = StringCodec();
 let nc = null;
 let agents = {};
+const fileStore = new Map();
 
 function log(...args) {
   console.log(new Date().toISOString(), '[bridge]', ...args);
@@ -103,6 +111,123 @@ function readBody(req) {
       reject(err);
     });
   });
+}
+
+function sanitizeFilename(name) {
+  return String(name || 'file').replace(/[\/\\\0]/g, '_');
+}
+
+function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    const contentType = req.headers['content-type'] || '';
+    const match = contentType.match(/boundary=(?:"([^"]+)"|([^\s;]+))/);
+    if (!match) return reject(new Error('no boundary'));
+    const boundary = match[1] || match[2];
+
+    const chunks = [];
+    let size = 0;
+    let settled = false;
+
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
+
+    req.on('data', chunk => {
+      if (settled) return;
+
+      size += chunk.length;
+      if (size > MAX_UPLOAD_REQUEST_SIZE) {
+        fail(new Error('too large'));
+        req.destroy();
+        return;
+      }
+
+      chunks.push(chunk);
+    });
+
+    req.on('end', () => {
+      if (settled) return;
+      settled = true;
+
+      try {
+        const buf = Buffer.concat(chunks);
+        const files = [];
+        const separator = Buffer.from(`--${boundary}`);
+        const headerBreak = Buffer.from('\r\n\r\n');
+        let pos = 0;
+
+        while (true) {
+          const start = buf.indexOf(separator, pos);
+          if (start === -1) break;
+          pos = start + separator.length;
+
+          if (buf[pos] === 0x2d && buf[pos + 1] === 0x2d) break;
+          if (buf[pos] === 0x0d) pos += 1;
+          if (buf[pos] === 0x0a) pos += 1;
+
+          const headerEnd = buf.indexOf(headerBreak, pos);
+          if (headerEnd === -1) break;
+
+          const headerStr = buf.slice(pos, headerEnd).toString('utf8');
+          const bodyStart = headerEnd + headerBreak.length;
+          const nextBoundary = buf.indexOf(separator, bodyStart);
+          if (nextBoundary === -1) break;
+
+          let bodyEnd = nextBoundary - 2;
+          if (bodyEnd < bodyStart) bodyEnd = bodyStart;
+
+          const fieldMatch = headerStr.match(/(?:^|\r\n)Content-Disposition:[^\r\n]*?\bname="([^"]+)"/i);
+          const filenameMatch = headerStr.match(/(?:^|\r\n)Content-Disposition:[^\r\n]*?\bfilename="([^"]*)"/i);
+          const typeMatch = headerStr.match(/(?:^|\r\n)Content-Type:\s*([^\r\n]+)/i);
+
+          if (fieldMatch && fieldMatch[1] === 'files' && filenameMatch) {
+            files.push({
+              data: buf.slice(bodyStart, bodyEnd),
+              fieldname: fieldMatch[1],
+              filename: sanitizeFilename(nodePath.basename(filenameMatch[1])) || 'file',
+              contentType: (typeMatch && typeMatch[1] ? typeMatch[1].trim() : '') || 'application/octet-stream',
+            });
+          }
+
+          pos = nextBoundary;
+        }
+
+        resolve(files);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    req.on('error', fail);
+  });
+}
+
+function initializeUploads() {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+  const now = Date.now();
+  let removedCount = 0;
+
+  for (const entry of fs.readdirSync(UPLOAD_DIR, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+
+    const filePath = nodePath.join(UPLOAD_DIR, entry.name);
+    try {
+      const stats = fs.statSync(filePath);
+      if (now - stats.mtimeMs > UPLOAD_TTL_MS) {
+        fs.unlinkSync(filePath);
+        removedCount += 1;
+      }
+    } catch (e) {
+      log('Failed to inspect upload during cleanup:', entry.name, e.message);
+    }
+  }
+
+  if (removedCount > 0) {
+    log(`Removed ${removedCount} expired upload(s)`);
+  }
 }
 
 /* ── Routes ── */
@@ -205,6 +330,91 @@ async function handleSend(req, res) {
   });
 }
 
+async function handleUpload(req, res) {
+  if (!checkAuth(req)) return json(res, 401, { error: 'unauthorized' });
+
+  let files;
+  try {
+    files = await parseMultipart(req);
+  } catch (e) {
+    return json(res, 400, { error: e.message });
+  }
+
+  if (files.length === 0) return json(res, 400, { error: 'no files' });
+  if (files.length > MAX_UPLOAD_FILES) return json(res, 400, { error: `max ${MAX_UPLOAD_FILES} files` });
+
+  for (const file of files) {
+    if (file.data.length > MAX_UPLOAD_FILE_SIZE) {
+      return json(res, 400, { error: `file too large: ${file.filename}` });
+    }
+  }
+
+  const results = [];
+  const writtenFiles = [];
+
+  try {
+    for (const file of files) {
+      const id = crypto.randomUUID();
+      const ext = nodePath.extname(file.filename) || '.bin';
+      const storagePath = nodePath.join(UPLOAD_DIR, `${id}${ext}`);
+
+      fs.writeFileSync(storagePath, file.data);
+      writtenFiles.push({ id, storagePath });
+
+      fileStore.set(id, {
+        contentType: file.contentType,
+        createdAt: Date.now(),
+        filename: file.filename,
+        size: file.data.length,
+        storagePath,
+      });
+
+      results.push({
+        id,
+        filename: file.filename,
+        content_type: file.contentType,
+        size: file.data.length,
+        url: `/bridge/files/${id}`,
+      });
+    }
+
+    return json(res, 201, results);
+  } catch (e) {
+    for (const writtenFile of writtenFiles) {
+      fileStore.delete(writtenFile.id);
+      try { fs.unlinkSync(writtenFile.storagePath); } catch {}
+    }
+    return json(res, 500, { error: e.message || 'upload failed' });
+  }
+}
+
+async function handleFileServe(req, res, pathname) {
+  if (!checkAuth(req)) return json(res, 401, { error: 'unauthorized' });
+
+  const id = pathname.slice('/bridge/files/'.length);
+  const meta = fileStore.get(id);
+  if (!meta) return json(res, 404, { error: 'not found' });
+  if (!fs.existsSync(meta.storagePath)) {
+    fileStore.delete(id);
+    return json(res, 404, { error: 'not found' });
+  }
+
+  cors(res);
+  res.writeHead(200, {
+    'Cache-Control': 'private, max-age=86400',
+    'Content-Disposition': `inline; filename="${sanitizeFilename(meta.filename).replace(/"/g, '\\"')}"`,
+    'Content-Length': meta.size,
+    'Content-Type': meta.contentType,
+  });
+
+  const stream = fs.createReadStream(meta.storagePath);
+  stream.on('error', () => {
+    if (!res.headersSent) json(res, 500, { error: 'read failed' });
+    else res.destroy();
+  });
+  stream.pipe(res);
+}
+
 async function handleHistory(req, res) {
   if (!checkAuth(req)) return json(res, 401, { error: 'unauthorized' });
   if (!nc) return json(res, 503, { error: 'NATS not connected' });
@@ -281,6 +491,8 @@ const server = http.createServer(async (req, res) => {
   try {
     if (path === '/bridge/health'  && req.method === 'GET')  return await handleHealth(req, res);
     if (path === '/bridge/agents'  && req.method === 'GET')  return await handleAgents(req, res);
+    if (path === '/bridge/upload'  && req.method === 'POST') return await handleUpload(req, res);
+    if (path.startsWith('/bridge/files/') && req.method === 'GET') return await handleFileServe(req, res, path);
     if (path === '/bridge/send'    && req.method === 'POST') return await handleSend(req, res);
     if (path === '/bridge/history' && req.method === 'GET')  return await handleHistory(req, res);
     if (path === '/bridge/new'     && req.method === 'POST') return await handleNew(req, res);
@@ -301,6 +513,7 @@ const server = http.createServer(async (req, res) => {
 
 async function main() {
   loadAgents();
+  initializeUploads();
 
   if (!AUTH_TOKEN) {
     log('⚠️ AUTH_TOKEN not set — running in trusted mode (no authentication). Set AUTH_TOKEN env var to enable auth.');

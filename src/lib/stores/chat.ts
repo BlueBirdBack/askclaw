@@ -1,13 +1,21 @@
 import { derived, get, writable } from 'svelte/store'
 
-import { getHistory, newChat, streamSend, type BridgeMessage, type ChatDetail } from '../api'
+import {
+  getHistory,
+  newChat,
+  streamSend,
+  uploadFiles,
+  type BridgeMessage,
+  type ChatDetail,
+  type UploadedFile,
+} from '../api'
 import { redactSensitiveAuth } from './auth'
 import type { BridgeSendFile, PendingFile } from '../types'
 
 export interface MessageAttachment {
   name: string
   type: string
-  url: string  // data URL or object URL for display
+  url: string
 }
 
 export interface ChatMessage {
@@ -38,10 +46,6 @@ interface ChatState {
   sessions: Record<string, ChatSession>
   status: ConnectionStatus
 }
-
-type ContentBlock =
-  | { type: 'input_text'; text: string }
-  | { type: 'input_image'; source: { type: 'base64'; media_type: string; data: string } }
 
 interface PreparedMessagePayload {
   attachments: MessageAttachment[]
@@ -194,7 +198,30 @@ function readFileAsDataUrl(file: File): Promise<string> {
   })
 }
 
-async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] = []): Promise<PreparedMessagePayload> {
+async function ensurePendingFilesReady(pendingFiles: PendingFile[]): Promise<void> {
+  await Promise.all(pendingFiles.map((pendingFile) => pendingFile.ready ?? Promise.resolve()))
+}
+
+function buildMessageAttachment(
+  pendingFile: PendingFile,
+  uploadedFile: UploadedFile | undefined,
+): MessageAttachment | null {
+  if (!uploadedFile) {
+    return null
+  }
+
+  return {
+    name: uploadedFile.filename || pendingFile.file.name,
+    type: uploadedFile.content_type || normalizeFileType(pendingFile.file) || 'application/octet-stream',
+    url: uploadedFile.url,
+  }
+}
+
+async function prepareMessagePayload(
+  text: string,
+  pendingFiles: PendingFile[] = [],
+  uploadedFiles: UploadedFile[] = [],
+): Promise<PreparedMessagePayload> {
   const trimmed = text.trim()
 
   if (pendingFiles.length === 0) {
@@ -206,27 +233,28 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
     }
   }
 
-  await Promise.all(
-    pendingFiles.map((pendingFile) => pendingFile.ready ?? Promise.resolve()),
-  )
+  if (uploadedFiles.length > 0 && uploadedFiles.length !== pendingFiles.length) {
+    throw new Error('Upload response mismatch')
+  }
 
-  const contentBlocks: ContentBlock[] = []
   const displaySections: string[] = []
   const files: BridgeSendFile[] = []
   const messageAttachments: MessageAttachment[] = []
+  let hasImages = false
 
-  for (const pendingFile of pendingFiles) {
+  for (const [index, pendingFile] of pendingFiles.entries()) {
     const file = pendingFile.file
     const type = normalizeFileType(file) || 'application/octet-stream'
+    const attachment = buildMessageAttachment(pendingFile, uploadedFiles[index])
+
+    if (attachment) {
+      messageAttachments.push(attachment)
+    }
 
     if (isTextLikeFile(file, type)) {
       const content = await file.text()
       const section = `--- ${file.name} ---\n${content}`
 
-      contentBlocks.push({
-        type: 'input_text',
-        text: section,
-      })
       displaySections.push(section)
       files.push({
         data: content,
@@ -240,34 +268,17 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
       const dataUrl = await readFileAsDataUrl(file)
       const [, base64 = ''] = dataUrl.split(',', 2)
 
-      contentBlocks.push({
-        type: 'input_image',
-        source: {
-          data: base64,
-          media_type: type,
-          type: 'base64',
-        },
-      })
-      // Don't add text placeholder — image renders inline via attachments
+      hasImages = true
       files.push({
         data: base64,
         name: file.name,
         type,
-      })
-      messageAttachments.push({
-        name: file.name,
-        type,
-        url: dataUrl,
       })
       continue
     }
 
     const note = `[Attached file: ${file.name} (${type})]`
 
-    contentBlocks.push({
-      type: 'input_text',
-      text: note,
-    })
     displaySections.push(note)
     files.push({
       data: '',
@@ -276,7 +287,6 @@ async function prepareMessagePayload(text: string, pendingFiles: PendingFile[] =
     })
   }
 
-  const hasImages = contentBlocks.some((block) => block.type === 'input_image')
   const fallbackPrompt = hasImages
     ? 'What is in the attached image(s)?'
     : 'See the attached file(s).'
@@ -536,7 +546,17 @@ export const chat = {
       return
     }
 
-    const payload = await prepareMessagePayload(text, pendingFiles)
+    let uploadedFiles: UploadedFile[] = []
+
+    if (pendingFiles.length > 0) {
+      await ensurePendingFilesReady(pendingFiles)
+      uploadedFiles = await uploadFiles(
+        pendingFiles.map((pendingFile) => pendingFile.file),
+        token,
+      )
+    }
+
+    const payload = await prepareMessagePayload(text, pendingFiles, uploadedFiles)
 
     // Re-check after async file prep — another send may have started while we awaited
     if (activeController) {

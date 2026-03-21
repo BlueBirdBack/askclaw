@@ -2,7 +2,8 @@
   import { compressImage } from '../compress'
   import type { PendingFile } from '../types'
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024
+  const MAX_IMAGE_SOURCE_SIZE = 50 * 1024 * 1024
+  const MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024
   const MAX_FILES = 5
   const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
   const EXTRA_ALLOWED_TYPES = new Set([
@@ -177,6 +178,18 @@
     pendingFiles = []
   }
 
+  function removePendingFile(fileId: string): boolean {
+    const target = pendingFiles.find((file) => file.id === fileId)
+
+    if (!target) {
+      return false
+    }
+
+    revokePreviewUrl(target)
+    pendingFiles = pendingFiles.filter((file) => file.id !== fileId)
+    return true
+  }
+
   function syncHeight() {
     if (!textarea) {
       return
@@ -206,12 +219,19 @@
         continue
       }
 
-      if (file.size > MAX_FILE_SIZE) {
-        notify(`${file.name} exceeds the 50MB limit.`)
+      const resolvedType = resolveType(file)
+      const isImage = IMAGE_TYPES.has(resolvedType)
+      const maxSize = isImage ? MAX_IMAGE_SOURCE_SIZE : MAX_UPLOAD_FILE_SIZE
+
+      if (file.size > maxSize) {
+        notify(
+          isImage
+            ? `${file.name} exceeds the 50MB preprocessing limit.`
+            : `${file.name} exceeds the 10MB upload limit.`,
+        )
         continue
       }
 
-      const isImage = IMAGE_TYPES.has(resolveType(file))
       const pendingFile: PendingFile = {
         file,
         id: crypto.randomUUID(),
@@ -220,11 +240,34 @@
       }
 
       if (isImage) {
+        const pendingFileId = pendingFile.id
+
         pendingFile.ready = compressImage(file)
           .then((compressed) => {
-            pendingFile.file = compressed
+            if (compressed.size > MAX_UPLOAD_FILE_SIZE) {
+              throw new Error(`${file.name} exceeds the 10MB upload limit after compression.`)
+            }
+
+            pendingFiles = pendingFiles.map((current) =>
+              current.id === pendingFileId
+                ? {
+                    ...current,
+                    file: compressed,
+                  }
+                : current,
+            )
           })
-          .catch(() => {})
+          .catch((error) => {
+            if (!removePendingFile(pendingFileId)) {
+              return
+            }
+
+            notify(
+              error instanceof Error
+                ? error.message
+                : `Unable to process ${file.name}.`,
+            )
+          })
       }
 
       pendingFiles = [...pendingFiles, pendingFile]
@@ -232,14 +275,7 @@
   }
 
   function removeFile(fileId: string) {
-    const target = pendingFiles.find((file) => file.id === fileId)
-
-    if (!target) {
-      return
-    }
-
-    revokePreviewUrl(target)
-    pendingFiles = pendingFiles.filter((file) => file.id !== fileId)
+    removePendingFile(fileId)
   }
 
   function handleFileSelect(event: Event) {
