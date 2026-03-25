@@ -97,45 +97,46 @@ describe('prepareMessagePayload', () => {
     await expect(prepareMessagePayload('look', [pending], [])).resolves.toBeDefined()
   })
 
-  it('text file (.txt) — encoded as base64, NOT inlined in displayText', async () => {
+  it('text file (.txt) — content in requestText (for LLM), NOT in displayText (bubble)', async () => {
     const pending = makePendingFile('notes.txt', 'text/plain', 'hello from file')
     const result = await prepareMessagePayload('read this', [pending], [])
 
     expect(result.files).toHaveLength(1)
     expect(result.files[0].name).toBe('notes.txt')
-    // data must be base64 (gateway requires it), not raw text
-    const decoded = atob(result.files[0].data)
-    expect(decoded).toContain('hello from file')
-    // displayText must NOT contain the file contents — only the user message
+    // data is plain text — relay inlines it into the message body
+    expect(result.files[0].data).toContain('hello from file')
+    // requestText includes file content (what LLM sees)
+    expect(result.requestText).toContain('hello from file')
+    expect(result.requestText).toContain('notes.txt')
+    // displayText is clean — only user's typed message
     expect(result.displayText).not.toContain('hello from file')
-    expect(result.displayText).not.toContain('notes.txt')
     expect(result.displayText).toBe('read this')
   })
 
-  it('markdown file (.md) — base64 encoded, content NOT in displayText', async () => {
+  it('markdown file (.md) — content in requestText, NOT in displayText', async () => {
     const pending = makePendingFile('README.md', 'text/markdown', '# Title\nBody text')
     const result = await prepareMessagePayload('summarize', [pending], [])
 
-    const decoded = atob(result.files[0].data)
-    expect(decoded).toContain('# Title')
-    expect(decoded).toContain('Body text')
-    // Must not bleed into the chat bubble
+    // LLM gets the content
+    expect(result.requestText).toContain('# Title')
+    expect(result.requestText).toContain('Body text')
+    // Bubble stays clean
     expect(result.displayText).not.toContain('# Title')
     expect(result.displayText).not.toContain('Body text')
+    expect(result.displayText).toBe('summarize')
   })
 
-  it('binary/pdf file — empty data, not in displayText', async () => {
+  it('binary/pdf file — empty data, not in displayText or requestText', async () => {
     const pending = makePendingFile('doc.pdf', 'application/pdf', '%PDF-1.4 binary')
     const result = await prepareMessagePayload('check this pdf', [pending], [])
 
     expect(result.files).toHaveLength(1)
     expect(result.files[0].name).toBe('doc.pdf')
     expect(result.files[0].data).toBe('')
-    // No file content or name in displayText (shown via attachment chip instead)
     expect(result.displayText).toBe('check this pdf')
   })
 
-  it('multiple mixed files — image + text file together', async () => {
+  it('multiple mixed files — image + text: LLM sees both, bubble shows only user text', async () => {
     const img = makePendingFile('photo.jpg', 'image/jpeg', 'img-data', true)
     const txt = makePendingFile('notes.txt', 'text/plain', 'some notes')
     const result = await prepareMessagePayload('here are both', [img, txt], [])
@@ -144,12 +145,12 @@ describe('prepareMessagePayload', () => {
     // image entry has base64 data
     const imgEntry = result.files.find((f) => f.name === 'photo.jpg')
     expect(imgEntry?.data.length).toBeGreaterThan(0)
-    // text entry is base64 encoded
+    // text entry has plain content for relay to inline
     const txtEntry = result.files.find((f) => f.name === 'notes.txt')
-    expect(txtEntry?.data).toBeTruthy()
-    const decoded = atob(txtEntry!.data)
-    expect(decoded).toContain('some notes')
-    // Neither file content in displayText
+    expect(txtEntry?.data).toContain('some notes')
+    // requestText includes the text file content (LLM reads it)
+    expect(result.requestText).toContain('some notes')
+    // displayText stays clean
     expect(result.displayText).not.toContain('some notes')
     expect(result.displayText).toBe('here are both')
   })
@@ -162,11 +163,11 @@ describe('prepareMessagePayload', () => {
     expect(result.displayText).toContain('What is in the attached image(s)?')
   })
 
-  it('empty text + non-image → fallback "See the attached file(s)."', async () => {
+  it('empty text + non-image → fallback in requestText', async () => {
     const pending = makePendingFile('data.csv', 'text/csv', 'a,b,c')
     const result = await prepareMessagePayload('', [pending], [])
 
-    expect(result.requestText).toBe('See the attached file(s).')
+    expect(result.requestText).toContain('See the attached file(s).')
     expect(result.displayText).toContain('See the attached file(s).')
   })
 

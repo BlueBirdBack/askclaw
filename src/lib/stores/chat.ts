@@ -253,12 +253,12 @@ export async function prepareMessagePayload(
 
     if (isTextLikeFile(file, type)) {
       const content = await file.text()
-      // Bug fix 1: don't inline file content in displayText — show filename chip only
-      // Bug fix 2: gateway requires base64 for all attachments — encode text as base64
-      const base64 = btoa(unescape(encodeURIComponent(content)))
+      // Send text content inline in requestText (so the LLM actually reads it)
+      // but NOT in displayText (so the bubble stays clean)
+      displaySections.push(`--- ${file.name} ---\n${content}`)
 
       files.push({
-        data: base64,
+        data: content, // plain text — relay inlines this into the message body
         name: file.name,
         type,
       })
@@ -291,13 +291,18 @@ export async function prepareMessagePayload(
     : 'See the attached file(s).'
   const userText = trimmed || fallbackPrompt
 
-  const displayText = [...displaySections, userText].filter(Boolean).join('\n\n')
+  // displayText: only the user's typed message — no file content in bubble
+  const displayText = userText
+
+  // requestText: includes file content inline so the LLM actually reads it
+  // (text files are in displaySections; images are sent as gateway attachments)
+  const requestText = [...displaySections, userText].filter(Boolean).join('\n\n')
 
   return {
     attachments: messageAttachments,
     displayText,
     files,
-    requestText: userText,
+    requestText,
   }
 }
 
