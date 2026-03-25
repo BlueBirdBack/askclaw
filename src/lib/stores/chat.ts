@@ -217,7 +217,7 @@ function buildMessageAttachment(
   }
 }
 
-async function prepareMessagePayload(
+export async function prepareMessagePayload(
   text: string,
   pendingFiles: PendingFile[] = [],
   uploadedFiles: UploadedFile[] = [],
@@ -291,11 +291,6 @@ async function prepareMessagePayload(
     ? 'What is in the attached image(s)?'
     : 'See the attached file(s).'
   const userText = trimmed || fallbackPrompt
-
-  contentBlocks.push({
-    type: 'input_text',
-    text: userText,
-  })
 
   const displayText = [...displaySections, userText].filter(Boolean).join('\n\n')
 
