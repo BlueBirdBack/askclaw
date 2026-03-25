@@ -196,4 +196,76 @@ test.describe('Bridge connectivity', () => {
     expect(serveResp.ok()).toBe(true)
     expect(serveResp.headers()['content-type']).toContain('image/png')
   })
+
+  test('jpeg with unicode filename + octet-stream MIME → infers image/jpeg from extension', async ({ page }) => {
+    // Reproduces the real browser behaviour: browsers often send application/octet-stream
+    // for files with Unicode filenames (e.g. 发臭.jpg, 起床了.jpg).
+    // Without the fix, content_type would be application/octet-stream → renders as link not thumbnail.
+    await page.goto('/')
+    const resp = await page.request.post('/bridge/upload', {
+      multipart: {
+        files: {
+          name: '发臭.jpg',
+          mimeType: 'application/octet-stream',   // worst-case browser behaviour
+          buffer: readFileSync(FIXTURE_IMAGE),
+        },
+      },
+    })
+    expect(resp.ok()).toBe(true)
+    const [file] = await resp.json()
+    expect(file.content_type).toBe('image/jpeg')  // must be inferred from .jpg extension
+    expect(file.content_type).not.toBe('application/octet-stream')
+  })
+
+  test('png with octet-stream MIME → infers image/png from extension', async ({ page }) => {
+    await page.goto('/')
+    const resp = await page.request.post('/bridge/upload', {
+      multipart: {
+        files: {
+          name: 'screenshot.png',
+          mimeType: 'application/octet-stream',
+          buffer: readFileSync(FIXTURE_IMAGE),
+        },
+      },
+    })
+    expect(resp.ok()).toBe(true)
+    const [file] = await resp.json()
+    expect(file.content_type).toBe('image/png')
+  })
+
+  test('correct MIME from browser is preserved as-is', async ({ page }) => {
+    // When browser sends correct type, use it — don't override with extension lookup
+    await page.goto('/')
+    const resp = await page.request.post('/bridge/upload', {
+      multipart: {
+        files: {
+          name: 'photo.jpg',
+          mimeType: 'image/jpeg',
+          buffer: readFileSync(FIXTURE_IMAGE),
+        },
+      },
+    })
+    const [file] = await resp.json()
+    expect(file.content_type).toBe('image/jpeg')
+  })
+
+  test('uploaded image with inferred type is servable and returns correct Content-Type header', async ({ page }) => {
+    // Full cycle: unicode + octet-stream → upload → serve → correct header
+    await page.goto('/')
+    const uploadResp = await page.request.post('/bridge/upload', {
+      multipart: {
+        files: {
+          name: '起床了.jpg',
+          mimeType: 'application/octet-stream',
+          buffer: readFileSync(FIXTURE_IMAGE),
+        },
+      },
+    })
+    const [uploaded] = await uploadResp.json()
+    expect(uploaded.content_type).toBe('image/jpeg')
+
+    const serveResp = await page.request.get(uploaded.url)
+    expect(serveResp.ok()).toBe(true)
+    expect(serveResp.headers()['content-type']).toContain('image/jpeg')
+  })
 })
