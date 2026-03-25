@@ -97,33 +97,42 @@ describe('prepareMessagePayload', () => {
     await expect(prepareMessagePayload('look', [pending], [])).resolves.toBeDefined()
   })
 
-  it('text file (.txt) — content inlined in data field', async () => {
+  it('text file (.txt) — encoded as base64, NOT inlined in displayText', async () => {
     const pending = makePendingFile('notes.txt', 'text/plain', 'hello from file')
     const result = await prepareMessagePayload('read this', [pending], [])
 
     expect(result.files).toHaveLength(1)
     expect(result.files[0].name).toBe('notes.txt')
-    expect(result.files[0].data).toContain('hello from file')
-    expect(result.displayText).toContain('notes.txt')
+    // data must be base64 (gateway requires it), not raw text
+    const decoded = atob(result.files[0].data)
+    expect(decoded).toContain('hello from file')
+    // displayText must NOT contain the file contents — only the user message
+    expect(result.displayText).not.toContain('hello from file')
+    expect(result.displayText).not.toContain('notes.txt')
+    expect(result.displayText).toBe('read this')
   })
 
-  it('markdown file (.md) — treated as text, content inlined', async () => {
+  it('markdown file (.md) — base64 encoded, content NOT in displayText', async () => {
     const pending = makePendingFile('README.md', 'text/markdown', '# Title\nBody text')
     const result = await prepareMessagePayload('summarize', [pending], [])
 
-    expect(result.files[0].data).toContain('# Title')
-    expect(result.files[0].data).toContain('Body text')
+    const decoded = atob(result.files[0].data)
+    expect(decoded).toContain('# Title')
+    expect(decoded).toContain('Body text')
+    // Must not bleed into the chat bubble
+    expect(result.displayText).not.toContain('# Title')
+    expect(result.displayText).not.toContain('Body text')
   })
 
-  it('binary/pdf file — fallback note in displayText, empty data string', async () => {
+  it('binary/pdf file — empty data, not in displayText', async () => {
     const pending = makePendingFile('doc.pdf', 'application/pdf', '%PDF-1.4 binary')
     const result = await prepareMessagePayload('check this pdf', [pending], [])
 
     expect(result.files).toHaveLength(1)
     expect(result.files[0].name).toBe('doc.pdf')
     expect(result.files[0].data).toBe('')
-    expect(result.displayText).toContain('doc.pdf')
-    expect(result.displayText).toContain('application/pdf')
+    // No file content or name in displayText (shown via attachment chip instead)
+    expect(result.displayText).toBe('check this pdf')
   })
 
   it('multiple mixed files — image + text file together', async () => {
@@ -135,9 +144,14 @@ describe('prepareMessagePayload', () => {
     // image entry has base64 data
     const imgEntry = result.files.find((f) => f.name === 'photo.jpg')
     expect(imgEntry?.data.length).toBeGreaterThan(0)
-    // text entry has inline content
+    // text entry is base64 encoded
     const txtEntry = result.files.find((f) => f.name === 'notes.txt')
-    expect(txtEntry?.data).toContain('some notes')
+    expect(txtEntry?.data).toBeTruthy()
+    const decoded = atob(txtEntry!.data)
+    expect(decoded).toContain('some notes')
+    // Neither file content in displayText
+    expect(result.displayText).not.toContain('some notes')
+    expect(result.displayText).toBe('here are both')
   })
 
   it('empty text + image → fallback "What is in the attached image(s)?"', async () => {

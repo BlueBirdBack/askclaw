@@ -237,7 +237,7 @@ export async function prepareMessagePayload(
     throw new Error('Upload response mismatch')
   }
 
-  const displaySections: string[] = []
+  const displaySections: string[] = [] // kept for fallback prompt logic only
   const files: BridgeSendFile[] = []
   const messageAttachments: MessageAttachment[] = []
   let hasImages = false
@@ -253,11 +253,12 @@ export async function prepareMessagePayload(
 
     if (isTextLikeFile(file, type)) {
       const content = await file.text()
-      const section = `--- ${file.name} ---\n${content}`
+      // Bug fix 1: don't inline file content in displayText — show filename chip only
+      // Bug fix 2: gateway requires base64 for all attachments — encode text as base64
+      const base64 = btoa(unescape(encodeURIComponent(content)))
 
-      displaySections.push(section)
       files.push({
-        data: content,
+        data: base64,
         name: file.name,
         type,
       })
@@ -277,9 +278,7 @@ export async function prepareMessagePayload(
       continue
     }
 
-    const note = `[Attached file: ${file.name} (${type})]`
-
-    displaySections.push(note)
+    // Binary file — no displaySection, empty data (unsupported by gateway)
     files.push({
       data: '',
       name: file.name,
