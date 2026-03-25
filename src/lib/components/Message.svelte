@@ -195,7 +195,7 @@
           {#if resolvedAttachments.length}
             <div class="image-attachments">
               {#each resolvedAttachments as att}
-                {#if att.type.startsWith('image/') && (!att.url.startsWith('/bridge/files/') || att.displayUrl !== att.url)}
+                {#if att.type.startsWith('image/')}
                   <img alt={att.name} class="attachment-image" src={att.displayUrl} />
                 {:else}
                   <a
