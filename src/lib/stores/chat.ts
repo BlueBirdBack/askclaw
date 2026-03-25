@@ -580,9 +580,12 @@ export const chat = {
       return { ...current }
     })
 
+    const currentChatId = get(state).sessions[agentId]?.currentChatId ?? null
+
     try {
       await streamSend({
         agent: agentId,
+        chatId: currentChatId,
         onChatId: (chatId) => {
           state.update((current) => {
             const session = ensureSession(current, agentId)

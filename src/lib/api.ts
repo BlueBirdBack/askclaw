@@ -89,6 +89,7 @@ interface JsonRequestOptions {
 
 interface StreamSendOptions {
   agent: string
+  chatId?: string | null
   files?: BridgeSendFile[]
   onChatId?: (chatId: string) => void
   onDelta: (delta: string) => void
@@ -275,6 +276,7 @@ export async function streamSend(options: StreamSendOptions): Promise<void> {
   const response = await fetch('/bridge/send', {
     body: JSON.stringify({
       agent: options.agent,
+      chatId: options.chatId ?? undefined,
       files: options.files,
       text: options.text,
     }),

@@ -35,7 +35,8 @@
   let composerValue = $state('')
   let showTokenOverlay = $state(false)
   let authRequired = $state<boolean | null>(null)
-  let sidebarOpen = $state(false)
+  // On desktop (>=768px) sidebar is always open in the 2-column grid layout
+  let sidebarOpen = $state(typeof window !== 'undefined' ? window.innerWidth >= 768 : false)
   let chats: ChatSummary[] = $state([])
   let activeChatId: string | null = $state(null)
   let jumpToMessageId: number | null = $state(null)

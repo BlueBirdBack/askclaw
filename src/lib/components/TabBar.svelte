@@ -378,7 +378,7 @@
 
   @media (min-width: 768px) {
     .menu-btn {
-      display: none;
+      display: inline-flex; /* keep sidebar accessible on desktop */
     }
 
     .topbar {
