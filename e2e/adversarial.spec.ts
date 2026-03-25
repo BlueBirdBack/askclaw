@@ -376,3 +376,28 @@ test.describe('Concurrent send protection', () => {
     expect(sends.filter((t) => t === 'first-send').length).toBe(1)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Composer visibility regression (P0 bug: composer missing on desktop)
+// ---------------------------------------------------------------------------
+
+test.describe('Composer visibility', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test('composer (textarea) is visible on desktop viewport', async ({ page }) => {
+    await loadApp(page)
+    // This test FAILS before the app-main height fix (composer missing when sidebar is open on desktop)
+    await expect(page.locator('textarea[aria-label="Message"]')).toBeVisible({ timeout: 5_000 })
+  })
+
+  test('send button is visible on desktop viewport', async ({ page }) => {
+    await loadApp(page)
+    await expect(page.locator('button[title="Send message"], button[title="Stop response"]')).toBeVisible({ timeout: 5_000 })
+  })
+
+  test('composer visible on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await loadApp(page)
+    await expect(page.locator('textarea[aria-label="Message"]')).toBeVisible({ timeout: 5_000 })
+  })
+})
