@@ -64,11 +64,6 @@ interface NewChatResponse {
   ok: boolean
 }
 
-interface ForwardResponse {
-  msg_id?: string
-  ok: boolean
-}
-
 export interface HealthResponse {
   status: string
   agents: BridgeAgent[]
@@ -248,19 +243,6 @@ export async function searchMessages(q: string, token: string): Promise<SearchRe
 
 export async function loadChat(id: string, token: string): Promise<void> {
   await requestJson<{ ok: boolean }>(`/bridge/chats/${encodeURIComponent(id)}/load`, {
-    method: 'POST',
-    token,
-  })
-}
-
-export async function forwardMessage(
-  targetAgent: string,
-  text: string,
-  fromAgent: string,
-  token: string,
-): Promise<ForwardResponse> {
-  return requestJson<ForwardResponse>('/bridge/forward', {
-    body: { agent: targetAgent, text, from_agent: fromAgent },
     method: 'POST',
     token,
   })

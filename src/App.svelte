@@ -1,15 +1,17 @@
 <script lang="ts">
   import { get } from 'svelte/store'
 
+  import { tick } from 'svelte'
+
   import {
     deleteChat as deleteChatRequest,
     fetchChat,
     fetchChats,
-    forwardMessage,
     getHealth,
     loadChat as loadChatRequest,
     type ChatSummary,
   } from './lib/api'
+  import { formatForwardContext } from './lib/formatContext'
   import Sidebar from './lib/components/Sidebar.svelte'
   import ChatArea from './lib/components/ChatArea.svelte'
   import Composer from './lib/components/Composer.svelte'
@@ -219,16 +221,28 @@
       return
     }
 
-    try {
-      await forwardMessage(targetAgentId, content, currentAgentId, token)
-      const targetLabel = agentItems.find((agent) => agent.id === targetAgentId)?.label ?? targetAgentId
-      showForwardStatus(`Forwarded to ${targetLabel}`, 'success')
-    } catch (error) {
-      const message = error instanceof Error ? redactSensitiveAuth(error.message) : 'Unable to forward message'
-      showForwardStatus(message, 'error')
-    } finally {
-      closeForwardModal()
-    }
+    // Collect context from current agent's session
+    const chatState = get(chat)
+    const currentSession = chatState.sessions[currentAgentId]
+    const sessionMessages = currentSession?.messages ?? []
+    const fromLabel = agentItems.find((a) => a.id === currentAgentId)?.label ?? currentAgentId
+
+    const formattedText = formatForwardContext({
+      messages: sessionMessages.map((m) => ({ role: m.role, content: m.content })),
+      fromAgentLabel: fromLabel,
+      forwardedContent: content,
+    })
+
+    const targetLabel = agentItems.find((agent) => agent.id === targetAgentId)?.label ?? targetAgentId
+    closeForwardModal()
+
+    // Switch to target agent and wait for Svelte reactivity to settle
+    chat.setCurrentAgent(targetAgentId)
+    await tick()
+
+    // Send the context-enriched message via existing flow
+    chat.sendMessage(targetAgentId, formattedText, token)
+    showForwardStatus(`Forwarded to ${targetLabel}`, 'success')
   }
 
   function handleTokenSave(value: string) {
