@@ -6,5 +6,14 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],
+    // Resolve Svelte to the client-side bundle (not SSR) when running in vitest
+    server: {
+      deps: {
+        inline: [/svelte/],
+      },
+    },
+  },
+  resolve: {
+    conditions: ['browser'],
   },
 })
