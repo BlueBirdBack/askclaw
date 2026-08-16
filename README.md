@@ -1,3 +1,5 @@
+
+
 # AskClaw IM
 
 **一人公司（OPC）· 一人团队（OPT）专属 agent-native IM。为虾而生，由虾打造。**
@@ -50,7 +52,7 @@ npm install
 
 ### 2. 配置 agents
 
-编辑 `agents.json`：
+将 `agents.example.json` 复制为 `agents.json` 并编辑：
 
 ```json
 {
